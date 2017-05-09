@@ -1,0 +1,91 @@
+@charset utf8;
+
+/**
+ * 主样式文件
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 1280px;
+    height: 720px;
+    background: transparent;
+}
+
+/* ---START channel list --- */
+
+/* 列表 */
+#clist {
+    height: 100%;
+    width: 235px;
+
+    margin-left: 45px;
+    background-color: #856B52;
+}
+
+/* 列表项，和上下箭头区通用部分 */
+#clist li, #clist-top, #clist-bottom {
+
+    width: 227px;
+    margin-bottom: 2px;
+    background-color: #0E1619;
+}
+
+/* 列表项 */
+#clist li {
+    list-style: none;
+    height: 50px;
+    color: #A4A5A7;
+    padding: 4px 0;
+}
+
+/* 频道信息 */
+.channel-info {
+    height: 48px;
+    background-color: #0E1619;
+}
+
+.channel-info span {
+
+    height: 100%;
+    color: #AAACAB;
+    font-size: 30px;
+    line-height: 48px;
+    text-align: center;
+}
+/*
+.channel-info:hover {
+    background-color: #856B52;
+}*/
+
+/* 频道行索引区 */
+.channel-index {
+    width: 20%;
+    display: block;
+    float: left;
+}
+
+.channel-name {
+    width: 80%;
+    display: inline-block;
+    float: right;
+}
+
+/* 列表顶部和底部箭头 */
+#clist-top, #clist-bottom {
+    height: 59px;
+    color: #856B52;
+    text-align: center;
+    line-height: 59px;
+}
+
+/* 焦点行背景 */
+.focus-bg-color {
+    background-color: #856B52;
+}
+
+
+/* ---END channel list --- */
