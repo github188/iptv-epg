@@ -24,6 +24,6 @@ var FateChannelDatas = [
     { channelID: '1000021', UserChannelID: '020', channelName: 'EEEE卫视', channelUrl: 'igmp://1.1.1.1:2000' },
     { channelID: '1000022', UserChannelID: '021', channelName: 'FFFF卫视', channelUrl: 'igmp://1.1.1.1:2000' },
     { channelID: '1000023', UserChannelID: '022', channelName: 'GGGG卫视', channelUrl: 'igmp://1.1.1.1:2000' },
-    { channelID: '1000024', UserChannelID: '023', channelName: 'HHHH卫视', channelUrl: 'igmp://1.1.1.1:2000' }
+    { channelID: '1000024', UserChannelID: '023', channelName: 'HHHH卫视', channelUrl: 'igmp://1.1.1.1:2000' } 
 
 ];

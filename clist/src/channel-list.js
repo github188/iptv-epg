@@ -96,12 +96,15 @@ ChannelList.prototype.eventHandler = function (event) {
 
 
     var keycode = event.which || event.keycode,
-        that = this;
+        that = this,
+        clistIsShow = $(that.parent).is(':visible');
 
     console.log('keycode: ' + keycode);
 
+    var filterKeys = [96, 13];
+
     // 列表没显示情况下不响应按键
-    if ( keycode !== 96 && !$(that.parent).is(':visible') ) { return false; }
+    if ( filterKeys.indexOf(keycode) !== -1 && !clistIsShow ) { return false; }
 
     // 有按键发生，重置自动隐藏计时器
     that._autoHide();
@@ -117,7 +120,15 @@ ChannelList.prototype.eventHandler = function (event) {
             that.toggle(); return false;
         break;
         case 13:    // play
-            that.play();
+
+            (clistIsShow  
+
+                // 列表显示情况下去播放
+                ? that.play() 
+
+                // 确定键显示或隐藏列表
+                : that.toggle());
+            
         break;
         default: return false; break;
     }
@@ -314,6 +325,8 @@ ChannelList.prototype._init = function () {
 // 6秒后自动隐藏
 ChannelList.prototype._autoHide = function () {
 
+    return false;
+
     var that = this;
 
     clearTimeout(that.autoHideTimer);
@@ -407,7 +420,7 @@ ChannelList.prototype._generateList = function (styles) {
     if ( that.isGenerated ) { debug('dont repeat;');return; }
 
     contents += '<div id="clist-top">'
-             + '<i class="fa fa-angle-up fa-2x" aria-hidden="true"></i>'
+             // + '<i class="fa fa-angle-up fa-2x" aria-hidden="true"></i>'
              + '</div>';
 
     for ( ; i < len; i++ ) {
@@ -418,7 +431,7 @@ ChannelList.prototype._generateList = function (styles) {
     }
 
     contents += '<div id="clist-bottom">'
-             + '<i class="fa fa-angle-down fa-2x" aria-hidden="true"></i>'
+             // + '<i class="fa fa-angle-down fa-2x" aria-hidden="true"></i>'
              + '</div>';
 
     parent = parent || $('body');
