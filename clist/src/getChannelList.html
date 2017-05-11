@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <link rel="stylesheet" href="">
+    <script src="../lib/jquery-2.2.4.js"></script>
+</head>
+<body>
+    <h1>获取列表</h1>
+    <script>
+
+        var isRequestStatus = false;
+
+        function requestList() {
+            
+            if (isRequestStatus) {
+                return;
+            }
+            isRequestStatus = true;
+            var tmpObj = {
+                "Message": {
+                    "MessageType": "GetChannelListReq",
+                    "MessageBody": {
+                        "ObjectID": '',
+                        "ObjectType": 1,
+                        "ChildrenLevel": 1,
+                        "LangCode": 'chi',
+                        "EpgGroupID": 1,
+                        "UserID": '01021',
+                        "Token": ''
+                    }
+                }
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: 'http://192.168.88.51/epgservice/index.php?MessageType=GetChannelListReq',
+                data: JSON.stringify(tmpObj),
+                dataType: 'json',
+                complete: function(data) {
+                    if (data.status === 200) {
+                        var _data = JSON.parse(data.response);
+                        var _msgBody = _data.Message.MessageBody;
+                        if (_msgBody.ResultCode == 200) {
+
+                            console.log(_msgBody);
+                        } else {
+                            console.log("请求数据失败");
+                        }
+                    } else {
+                        console.log("网络请求失败");
+                    }
+
+                    isRequestStatus = false;
+                },
+                error: function(err) {
+                    console.log(err);
+                },
+            });
+        }
+
+        // requestList();
+
+    </script>
+</body>
+</html>

@@ -19,6 +19,8 @@ body {
 
 /* 列表 */
 #clist {
+    display: none; 
+
     height: 100%;
     width: 235px;
 
