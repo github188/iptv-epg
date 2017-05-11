@@ -192,6 +192,7 @@ ChannelList.prototype.requestChannels = function (callback) {
     };
 
     xhr.send(null);
+
     /*
     // '/epgservice/index.php?MessageType=GetChannelListReq'
     $.ajax({
@@ -205,7 +206,6 @@ ChannelList.prototype.requestChannels = function (callback) {
                 if (_msgBody.ResultCode == 200) {
 
                     var channels = _msgBody.ChannelList.Channel;
-
                     if ( channels && channels.length > 0 ) {
                         that.channels = [].slice.call(channels, 0);
                         callback && callback();
