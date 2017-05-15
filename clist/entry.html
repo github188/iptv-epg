@@ -9,6 +9,11 @@
     <link rel="stylesheet" href="./styles/font-awesome.min.css">
     <!-- <link rel="stylesheet" href="./styles/bootstrap.min.css"> -->
     <style>
+        body {
+            background-color: white;
+            padding: 10px;
+        }
+
         .test-tag {
             position: absolute;
             right: 10px;
@@ -24,22 +29,55 @@
         .container a {
             text-decoration: none;
         }
+
+        #refresh {
+            position: absolute;
+            left: 10px;
+            bottom: 20px;
+            width: 60px;
+            background-color: green;
+            border-radius: 3px;
+            text-align: center;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div id="container" class="container">
-        <i class="fa fa-bed" aria-hidden="true"></i>
-        <a href="http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/index_epg.html">酒店入口</a>
-        <br>
-        <i class="fa fa-youtube-play" aria-hidden="true"></i>
-        <a href="http://192.168.88.36/clist/index2.html">直播页面</a>
-        <br>
-        <i class="fa fa-television" aria-hidden="true"></i>
-        <a href="http://192.168.88.36/clist/index-bw.html">无MP直播页面</a>
-
+        <!-- 链接列表 -->
     </div>
+    <button id="refresh"><i class="fa fa-refresh" aria-hidden="true"></i> 刷新</button>
     <span class="test-tag">Entry Page(Testing...)</span>
+    <script src="./cfg/config.js"></script>
     <script>
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        $('refresh').onclick = function (e) {
+            window.document.location.href = window.document.location.href;
+
+            console.log(e.target);
+            // if (e.target)
+        }
+
+        function init() {
+            
+            var linkHtml = '',
+                links = GCL_TEST_LINKS;
+
+            for ( var i = 0, len = links.length; i < len; i++ ) {
+                linkHtml += '<br>' + links[i].icon + '&nbsp;&nbsp;'
+                    + '<a href="' + links[i].link + '">'
+                    + links[i].text 
+                    + '</a>';
+            }
+
+            $('container').innerHTML = linkHtml;
+
+        };
+
+        init();
     </script>
 </body>
 </html>

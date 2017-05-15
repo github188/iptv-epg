@@ -17,6 +17,10 @@
  * 2017-05-10T17:35:58+08:00
  *
  * [ADD] MediaPlayController{Object}
+ *
+ * 2017/5/15 16:18:50
+ *
+ * [TEST] 测试：releaseMediaPlayer 能否正常关闭视频 [Res: OK]
  *  
  */
 
@@ -113,6 +117,11 @@ ChannelList.prototype.eventHandler = function (event) {
         case 8:     // 返回键
             if (that.isShow) { that.hide(); } return false;
         break;
+        case 33:    // test
+        case 34:
+            window.document.location.href = GCL_TEST_ENTRY_PAGE;
+            return false;
+        break;
         case 13:    // 确认键/播放键
 
             (that.isShow  
@@ -123,7 +132,7 @@ ChannelList.prototype.eventHandler = function (event) {
                 : that.show());
             return false;
         break;
-        default: return false; break;
+        default: return true; break;
     }
 };
 
@@ -141,7 +150,7 @@ ChannelList.prototype.hide = function () {
 
 ChannelList.prototype.setChannelDataDomain = function () {
 
-    this.listServerAddr = CHANNEL_DATA_DOMIAN || 'http://192.168.88.36/clist/data/channel.json';
+    this.listServerAddr = GCL_CHANNEL_DATA_DOMIAN || 'http://192.168.88.36/clist/data/channel.json';
 
     return this;
 }
@@ -730,8 +739,9 @@ MediaPlayController.prototype.initMediaPlay = function () {
 }
 
 MediaPlayController.prototype.stop = function () {
-    this.mp.stop(1);
-
+    // this.mp.stop(1);
+    // this.mp.close();
+    this.mp.releaseMediaPlayer(this.mp.getNativePlayerInstanceID());
     return this;
 }
 
@@ -787,6 +797,8 @@ window.onunload = function () {
     
     // 这里执行销毁播放器实例操作，避免每打开一次直播页面
     // 就会创建一个播放器实例
+
+    window.mpc.stop();
 
     // window.mpc.mp.stop(); // 停止播放失败，避免关闭页面后视频在后台播放
     // window.mpc.mp.close();

@@ -113,6 +113,10 @@ ChannelList.prototype.eventHandler = function (event) {
         case 8:     // 返回键
             if (that.isShow) { that.hide(); } return false;
         break;
+        case 33:    // test
+        case 34:
+            window.document.location.href = GCL_TEST_ENTRY_PAGE;
+            return false;
         case 13:    // 确认键/播放键
 
             (that.isShow  
@@ -141,7 +145,7 @@ ChannelList.prototype.hide = function () {
 
 ChannelList.prototype.setChannelDataDomain = function () {
 
-    this.listServerAddr = CHANNEL_DATA_DOMIAN || 'http://192.168.88.36/clist/data/channel.json';
+    this.listServerAddr = GCL_CHANNEL_DATA_DOMIAN || 'http://192.168.88.36/clist/data/channel.json';
 
     return this;
 }
