@@ -171,11 +171,10 @@ ChannelList.prototype.requestChannels = function (callback) {
 
             var _data = JSON.parse(xhr.responseText);
             var _msgBody = _data.Message.MessageBody;
-            that.error('resultCode: ' + _msgBody.ResultCode);
+
             if (_msgBody.ResultCode == 200) {
 
                 var channels = _msgBody.ChannelList.Channel;
-                that.error('bool: ' + channels && channels.length > 0);
 
                 if ( channels && channels.length > 0 ) {
                     // that.error('callback: ' + callback.toString());

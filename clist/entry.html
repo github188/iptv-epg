@@ -1,20 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+    <meta name="page-view-size" content="1280*720">
     <title>入口页面</title>
-    <link rel="stylesheet" href="lib/bootstrap-4.0.0.mim.css">
+    <link rel="stylesheet" href="./styles/font-awesome.min.css">
+    <link rel="stylesheet" href="./styles/bootstrap.min.css">
     <style>
-        .links {
-            margin: 0 auto;
+        .test-tag {
+            position: absolute;
+            right: 10px;
+            bottom: 20px;
+            background-color: red;
+            color: white;
+            font-size: 12px;
+            border-radius: 5px;
+
+            padding: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="links" class="links">
+    <div id="container" class="container">
+        <i class="fa fa-bed" aria-hidden="true"></i>
         <a href="http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/index_epg.html">酒店入口</a>
         <br>
-        <a href="http://192.168.88.36/clist/index.html">直播页面</a>
+        <i class="fa fa-youtube-play" aria-hidden="true"></i>
+        <a href="http://192.168.88.36/clist/index2.html">直播页面</a>
+        <br>
+        <i class="fa fa-television" aria-hidden="true"></i>
+        <a href="http://192.168.88.36/clist/index-bw.html">无MP直播页面</a>
+
     </div>
+    <span class="test-tag">Entry Page(Testing...)</span>
+    <script>
+    </script>
 </body>
 </html>
