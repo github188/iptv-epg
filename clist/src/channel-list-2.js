@@ -156,7 +156,7 @@ ChannelList.prototype.hide = function () {
 
 ChannelList.prototype.setChannelDataDomain = function () {
 
-    this.listServerAddr = GCL_CHANNEL_DATA_DOMIAN || 'http://192.168.88.36/clist/data/channel.json';
+    this.listServerAddr = GCL_CHANNEL_DATA_DOMIAN;
 
     return this;
 }
