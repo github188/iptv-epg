@@ -21,6 +21,12 @@
  * 2017/5/15 16:18:50
  *
  * [TEST] 测试：releaseMediaPlayer 能否正常关闭视频 [Res: OK]
+ *
+ * 2017/6/2 20:10:56
+ *
+ * [ADD] mpc: virtualEventHandler   处理播放虚拟事件
+ *
+ * [TEST] 1. 能否正常播放 ts 视频；2. 能否正常收到 `EVENT_MEDIA_*` 类的播放消息
  *  
  */
 
@@ -613,30 +619,6 @@ function MediaPlayController() {
     this.replayTimer = null;
 }
 
-/*
-MediaPlayController.prototype.VirtualMsgHandler = function ( msg ) {
-   
-    var that = this;
-
-    var eventMediaEndHandler = function () {
-        
-        that.error('media play end ...');
-
-        clearTimeout(that.replayTimer);
-        that.replayTimer = setTimeout(function () { 
-            that.play(); 
-        }, 2000);
-    };
-
-    switch () {
-        case 'EVENT_MEDIA_END': // 播放结束，重新播放
-            eventMediaEndHandler();
-        break;
-        default: return false;
-        break;
-    } 
-}; */
-
 MediaPlayController.prototype.setChannelID = function (channelUserId) {
     this.channelID = channelUserId;
 
@@ -776,6 +758,7 @@ MediaPlayController.prototype.play = function (playUrl) {
 
     if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
 
+    // 设置播放地址
     this.setMediaStr(playUrl);
 
     // 或者直接用 joinChannel 用频道号去播放
@@ -788,13 +771,7 @@ MediaPlayController.prototype.play = function (playUrl) {
     return this;
 };
 
-
-
-
-
 /* ---------------------------END MediaPlayer --------------------------- */
-
-
 
 window.onload = function () {
 
@@ -815,10 +792,6 @@ window.onload = function () {
     // 2. 频道地址播放
     mpc.init().play(clist.currPlayUrl || mpc.playUrl);
 
-    // window.onsystemevent = function (code) {
-    //     mpc.error('onsystemevent code: ' + code + ',,,,:: ' + Utility.getEvent());
-    //     mpc.virtualEventHandler(code);
-    // }
     window.onkeydown = function (event) {
 
         var keycode = event.which ? event.which : event.keycode;
