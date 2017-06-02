@@ -24,6 +24,8 @@
             border-radius: 5px;
 
             padding: 5px;
+
+            z-index: 50;
         }
 
         .container a {
@@ -34,7 +36,7 @@
             position: absolute;
             left: 10px;
             bottom: 20px;
-            width: 60px;
+            width: 80px;
             background-color: green;
             border-radius: 3px;
             text-align: center;
@@ -78,6 +80,106 @@
         };
 
         init();
+
+
+        function GCL(id) {
+            
+            this.no = 1;
+            this.div = null;
+            this.id = id || 'gcl-test-div';
+            this.switch = false;
+            this.created = false;
+            this.style = {
+                position: 'absolute',
+                right: '0px',
+                top: '0px',
+                backgroundColor: 'gray',
+                height: '100%',
+                width: '200px',
+                fontSize: '16px',
+                textAlign: 'left'
+            };
+            this.split = '';
+
+            this.setSplit = function (split) {
+                this.split = split;
+            }
+
+            this.create = function () {
+                var info = document.createElement('div');
+                info.id = this.id;
+
+                for (var prop in this.style) {
+                    info.style[prop] = this.style[prop];
+                }
+                
+                document.body.appendChild(info);
+
+                this.div = info;
+
+                this.created = true;
+                return this;
+            };
+
+            this._print = function (str) {
+                this.div.innerHTML += '[' + (this.split ? this.split : this.no++) + ']' + str + '<br>';
+            };
+
+            this.print = function (obj, desc, isValue) {
+                
+                if (!this.switch) { return false; }
+
+                var content = '';
+
+                if (Array.isArray(obj)) {
+                    for (var i = 0; i < obj.length; i++) {
+
+                        content = isValue 
+                            ? obj[i].key 
+                            : obj[i].key 
+                                ? obj[i].desc + ': yes' 
+                                : obj[i].desc + ': no';
+
+                        this._print(content);
+                    }
+                } else {
+                    this._print(
+                        isValue
+                            ? desc + ':' + JSON.stringify(obj)
+                            : obj 
+                                ? desc + ': yes' 
+                                : desc + ': no'
+                    );
+                }
+            };
+
+            this.open = this.start = this.on = function () {
+                
+                if (!this.created) {
+                    this.create();
+                }
+
+                this.switch = true;
+            };
+
+            this.close = this.off = function () {
+
+                this.switch = false;
+                this.div.innerHTML = '';
+                // document.body.removeChild(this.div);
+            }
+        }
+
+        var gcl = new GCL();
+        gcl.open();
+        var iPanel = {};
+
+        gcl.print(
+            [
+                {key: iPanel, desc: 'ipanel'},
+                {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'}
+            ]
+        );
     </script>
 </body>
 </html>

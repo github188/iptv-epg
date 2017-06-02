@@ -608,7 +608,7 @@ function debug(str) {
 function MediaPlayController() {
     
     this.mediaStr = '';
-    this.playUrl = 'http://192.168.88.36/clist/vod/yanguiren.mp4';
+    this.playUrl = GCL_TEST_VIDEO_DFT;
     this.mp = null;
     this.replayTimer = null;
 }
@@ -679,9 +679,36 @@ MediaPlayController.prototype.error = function (msg, code, handler) {
     }, 2000);
 };
 
+// 虚拟事件处理
+MediaPlayController.prototype.virtualEventHandler = function () {
+
+    var eventJson = Utility.getEvent();
+
+    // 这里可能会报错，因为底下传上来的的 
+    // event json 中的 key 没有带引号，JSON.parse 会解析错误
+    // eventJson = JSON.parse(eventJson);
+    eventJson = eval('(' + eventJson + ')');
+
+    var type = eventJson.type;
+
+    this.error('virtualEventHandler code type: ' + type);
+    switch (type) {
+        case 'EVENT_MEDIA_BEGINNING':   // 视频开始播放
+            break;
+        case 'EVENT_MEDIA_END':     // 视频播放结束
+            this.play(this.playUrl);
+            break;
+        case 'EVENT_MEDIA_ERROR':   // 视频播放错误
+            break;
+        default:return false;break;
+    }
+
+    return false;
+};
+
 MediaPlayController.prototype.setMediaStr = function (playUrl) {
     
-    if ( !playUrl ) { that.error('频道地址不存在！'); return; }
+    if ( !playUrl ) { that.error('setMediaStr 频道地址不存在！'); return; }
 
     this.playUrl = playUrl;
 
@@ -747,7 +774,7 @@ MediaPlayController.prototype.stop = function () {
 
 MediaPlayController.prototype.play = function (playUrl) {
 
-    if ( !playUrl ) { this.error('频道地址不存在！'); return; }
+    if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
 
     this.setMediaStr(playUrl);
 
@@ -788,8 +815,25 @@ window.onload = function () {
     // 2. 频道地址播放
     mpc.init().play(clist.currPlayUrl || mpc.playUrl);
 
+    // window.onsystemevent = function (code) {
+    //     mpc.error('onsystemevent code: ' + code + ',,,,:: ' + Utility.getEvent());
+    //     mpc.virtualEventHandler(code);
+    // }
     window.onkeydown = function (event) {
+
+        var keycode = event.which ? event.which : event.keycode;
+
+        mpc.error('onkeydown code: ' + keycode);
+
+        // 虚拟事件
+        if (keycode === 768) {
+            mpc.virtualEventHandler();
+            return false;
+        }
+
         clist.eventHandler(event);
+
+        return true;
     };
 }
 
