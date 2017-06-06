@@ -32,5 +32,21 @@ var GCL_TEST_LINKS = [
         link: 'http://192.168.88.36/iptv/clist/index-bw.html',
         icon: '<i class="fa fa-television" aria-hidden="true"></i>',
         text: '无MP直播页面'
+    }, {
+        link: 'http://113.136.46.36/iptv/portal_main.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '陕西EPG入口'
+    }, {
+        link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/portal.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '云南EPG入口'
+    }, {
+        link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/portal.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '重庆EPG入口'
+    }, {
+        link: 'http://113.136.96.196:8282/EPG/jsp/xagqftkdb/en/sx_epg/sx_epg.jsp',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '陕西IPTV入口'
     }
 ];

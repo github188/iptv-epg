@@ -56,6 +56,10 @@
             return document.getElementById(id);
         }
 
+        function gotoEPG() {
+            window.location.href = '../portal.html';
+        }
+
         $('refresh').onclick = function (e) {
             window.document.location.href = window.document.location.href;
 
@@ -130,15 +134,17 @@
                 if (!this.switch) { return false; }
 
                 var content = '';
+                var tmp = null;
 
                 if (Array.isArray(obj)) {
                     for (var i = 0; i < obj.length; i++) {
+                        tmp = obj[i];
 
-                        content = isValue 
-                            ? obj[i].key 
-                            : obj[i].key 
-                                ? obj[i].desc + ': yes' 
-                                : obj[i].desc + ': no';
+                        if (tmp.isValue) {
+                            content = tmp.desc + ': ' + tmp.key;
+                        } else {
+                            content = tmp.key ? tmp.desc + ': true' : tmp.desc + ': false';
+                        }
 
                         this._print(content);
                     }
@@ -147,10 +153,18 @@
                         isValue
                             ? desc + ':' + JSON.stringify(obj)
                             : obj 
-                                ? desc + ': yes' 
-                                : desc + ': no'
+                                ? desc + ': true' 
+                                : desc + ': false'
                     );
                 }
+            };
+
+            this.append = function (key, value) {
+                this.no++;
+
+                this._print(key + ': ' + value); 
+
+                return this;  
             };
 
             this.open = this.start = this.on = function () {
@@ -177,9 +191,26 @@
         gcl.print(
             [
                 {key: iPanel, desc: 'ipanel'},
-                {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'}
+                {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'},
+                {key: Authentication, desc: 'Authentication'},
+                {key: Authentication.CTCGetConfig('UserID'), desc: 'UserID', isValue: true}
             ]
         );
+
+
+        window.onkeydown = function (event) {
+            var keycode = event.which ? event.which : event.keycode;
+
+            switch (keycode) {
+                case 8:
+                    gcl.append('keycode', 8);
+                    gotoEPG();
+                    return false;
+                break;
+                default: return true; break;
+            }
+        }
+
     </script>
 </body>
 </html>
