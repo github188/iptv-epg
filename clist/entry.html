@@ -11,36 +11,11 @@
     <style>
         body {
             background-color: white;
-            padding: 10px;
-        }
-
-        .test-tag {
-            position: absolute;
-            right: 10px;
-            bottom: 20px;
-            background-color: red;
-            color: white;
-            font-size: 12px;
-            border-radius: 5px;
-
-            padding: 5px;
-
-            z-index: 50;
+            padding: 20px;
         }
 
         .container a {
             text-decoration: none;
-        }
-
-        #refresh {
-            position: absolute;
-            left: 10px;
-            bottom: 20px;
-            width: 80px;
-            background-color: green;
-            border-radius: 3px;
-            text-align: center;
-            color: white;
         }
     </style>
 </head>
@@ -48,9 +23,8 @@
     <div id="container" class="container">
         <!-- 链接列表 -->
     </div>
-    <button id="refresh"><i class="fa fa-refresh" aria-hidden="true"></i> 刷新</button>
-    <span class="test-tag">Entry Page(Testing...)</span>
     <script src="./cfg/config.js"></script>
+    <script src="./src/gcl-debug.js"></script>
     <script>
         function $(id) {
             return document.getElementById(id);
@@ -58,13 +32,6 @@
 
         function gotoEPG() {
             window.location.href = '../portal.html';
-        }
-
-        $('refresh').onclick = function (e) {
-            window.document.location.href = window.document.location.href;
-
-            console.log(e.target);
-            // if (e.target)
         }
 
         function init() {
@@ -85,117 +52,19 @@
 
         init();
 
-
-        function GCL(id) {
-            
-            this.no = 1;
-            this.div = null;
-            this.id = id || 'gcl-test-div';
-            this.switch = false;
-            this.created = false;
-            this.style = {
-                position: 'absolute',
-                right: '0px',
-                top: '0px',
-                backgroundColor: 'gray',
-                height: '100%',
-                width: '200px',
-                fontSize: '16px',
-                textAlign: 'left'
-            };
-            this.split = '';
-
-            this.setSplit = function (split) {
-                this.split = split;
-            }
-
-            this.create = function () {
-                var info = document.createElement('div');
-                info.id = this.id;
-
-                for (var prop in this.style) {
-                    info.style[prop] = this.style[prop];
-                }
-                
-                document.body.appendChild(info);
-
-                this.div = info;
-
-                this.created = true;
-                return this;
-            };
-
-            this._print = function (str) {
-                this.div.innerHTML += '[' + (this.split ? this.split : this.no++) + ']' + str + '<br>';
-            };
-
-            this.print = function (obj, desc, isValue) {
-                
-                if (!this.switch) { return false; }
-
-                var content = '';
-                var tmp = null;
-
-                if (Array.isArray(obj)) {
-                    for (var i = 0; i < obj.length; i++) {
-                        tmp = obj[i];
-
-                        if (tmp.isValue) {
-                            content = tmp.desc + ': ' + tmp.key;
-                        } else {
-                            content = tmp.key ? tmp.desc + ': true' : tmp.desc + ': false';
-                        }
-
-                        this._print(content);
-                    }
-                } else {
-                    this._print(
-                        isValue
-                            ? desc + ':' + JSON.stringify(obj)
-                            : obj 
-                                ? desc + ': true' 
-                                : desc + ': false'
-                    );
-                }
-            };
-
-            this.append = function (key, value) {
-                this.no++;
-
-                this._print(key + ': ' + value); 
-
-                return this;  
-            };
-
-            this.open = this.start = this.on = function () {
-                
-                if (!this.created) {
-                    this.create();
-                }
-
-                this.switch = true;
-            };
-
-            this.close = this.off = function () {
-
-                this.switch = false;
-                this.div.innerHTML = '';
-                // document.body.removeChild(this.div);
-            }
-        }
-
-        var gcl = new GCL();
+        var gcl = new GCLDebug();
         gcl.open();
-        var iPanel = {};
+        // var iPanel = {};
 
-        gcl.print(
-            [
-                {key: iPanel, desc: 'ipanel'},
-                {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'},
-                {key: Authentication, desc: 'Authentication'},
-                {key: Authentication.CTCGetConfig('UserID'), desc: 'UserID', isValue: true}
-            ]
-        );
+        // gcl.print(
+        //     [
+        //         {key: iPanel, desc: 'ipanel'},
+        //         {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'},
+        //         {key: Authentication, desc: 'Authentication'},
+        //         {key: Authentication.CTCGetConfig('UserID'), desc: 'UserID', isValue: true},
+        //         {key: sessionStorage.getItem('PortalUrl'), desc: 'url', isValue: true}
+        //     ]
+        // );
 
 
         window.onkeydown = function (event) {

@@ -786,6 +786,9 @@ window.onload = function () {
     window.onkeydown = function (event) {
         clist.eventHandler(event);
     };
+
+    var gclDebug = new GCLDebug();
+    gclDebug.open();
 }
 
 window.onunload = function () {

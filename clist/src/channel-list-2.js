@@ -88,7 +88,7 @@ function ChannelList() {
     this.isRequestStatus = false;
 
     // 频道列表服务器地址
-    this.listServerAddr = 'http://192.168.88.51';
+    this.listServerAddr = GCL_LOCALE_DOMAIN;
 
     // 播放器控制对象
     this.mpc = null;
@@ -808,6 +808,10 @@ window.onload = function () {
 
         return true;
     };
+
+    // 测试开关
+    var gclDebug = new GCLDebug();
+    gclDebug.open();
 }
 
 window.onunload = function () {
