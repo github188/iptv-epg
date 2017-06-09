@@ -643,7 +643,7 @@ MediaPlayController.prototype.error = function (msg, code, handler) {
         + 'left:' + left
         + 'px;top:40%;'
         + 'width:' + width 
-        + 'px;height:80px;background-color:gray;border-radius:2px;'
+        + 'px;background-color:gray;border-radius:2px;'
         + 'text-align:center;line-height:80px;color:white;font-size:22px;'
         + '">'
         + '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>'
@@ -758,6 +758,8 @@ MediaPlayController.prototype.play = function (playUrl) {
 
     if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
 
+    // this.mp.stop(1);
+
     // 设置播放地址
     this.setMediaStr(playUrl);
 
@@ -819,7 +821,7 @@ window.onunload = function () {
     // 这里执行销毁播放器实例操作，避免每打开一次直播页面
     // 就会创建一个播放器实例
 
-    window.mpc.stop();
+    // window.mpc.stop(1);
 
     // window.mpc.mp.stop(); // 停止播放失败，避免关闭页面后视频在后台播放
     // window.mpc.mp.close();

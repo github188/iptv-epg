@@ -1,4 +1,6 @@
 
+var GCL_DEBUG_ON = true;
+
 
 function GCLDebug(id) {
     
@@ -15,20 +17,24 @@ function GCLDebug(id) {
         width: '200px',
         fontSize: '16px',
         textAlign: 'left',
-        paddingTop: '10px'
+        paddingTop: '10px',
+        overflow: 'scroll'
     };
     this.split = '';
     this.div = null;
     this.tag = null;
     this.refresh = null;
     this.off = null;
+    this.root = document.getElementByid('app');
 
     this.destory = function () {
         
-        document.body.removeChild(this.refresh);
-        document.body.removeChild(this.tag);
-        document.body.removeChild(this.div);
-        document.body.removeChild(this.off);
+        var rootElement = this.root || document.body;
+
+        rootElement.removeChild(this.refresh);
+        rootElement.removeChild(this.tag);
+        rootElement.removeChild(this.div);
+        rootElement.removeChild(this.off);
     }
 
     this.createRefresh = function () {
@@ -36,15 +42,18 @@ function GCLDebug(id) {
         var refresh = document.createElement('button');
 
         refresh.style.position = 'absolute';
-        refresh.style.left = '20px';
+        refresh.style.left = '40px';
         refresh.style.bottom = '20px';
-        refresh.style.width = '80px';
+        refresh.style.height = '30px';
         refresh.style.backgroundColor = 'green';
         refresh.style.borderRadius = '3px';
         refresh.style.textAlign = 'center';
         refresh.style.color = 'white';
+        refresh.style.padding = '0px';
 
-        document.body.appendChild(refresh);   
+        var rootElement = this.root || document.body;
+
+        rootElement.appendChild(refresh);   
 
         refresh.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i> 刷新'
 
@@ -75,7 +84,8 @@ function GCLDebug(id) {
         tag.style.padding = '5px';
         tag.style.zIndex = 50;
 
-        document.body.appendChild(tag);
+        var rootElement = this.root || document.body;
+        rootElement.appendChild(tag);
 
         tag.innerHTML = 'Attention Please!(Testing...)';
 
@@ -88,15 +98,16 @@ function GCLDebug(id) {
         var off = document.createElement('button');
 
         off.style.position = 'absolute';
-        off.style.left = '120px';
+        off.style.left = '100px';
         off.style.bottom = '20px';
-        off.style.width = '80px';
+        off.style.height = '30px';
         off.style.backgroundColor = 'red';
         off.style.borderRadius = '3px';
         off.style.textAlign = 'center';
         off.style.color = 'white';
 
-        document.body.appendChild(off);   
+        var rootElement = this.root || document.body;
+        rootElement.appendChild(off);
 
         off.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i> DEBUG OFF'
 
@@ -137,6 +148,8 @@ function GCLDebug(id) {
 
     this._print = function (str) {
 
+        if (!GCL_DEBUG_ON) { return; }
+
         this.div.innerHTML += '<input class="test-content" type="text" value="[' + (this.split ? this.split : this.no++) + ']' + str + '" />' 
             + '<br>';
     };
@@ -172,7 +185,7 @@ function GCLDebug(id) {
     };
 
     this.append = function (key, value) {
-        this.no++;
+        // this.no++;
 
         this._print(key + ': ' + value); 
 

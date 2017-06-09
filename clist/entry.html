@@ -11,11 +11,13 @@
     <style>
         body {
             background-color: white;
-            padding: 20px;
+            padding: 0px;
+            margin: 0px;
         }
 
         .container a {
             text-decoration: none;
+            margin-left: 20px;
         }
     </style>
 </head>
@@ -54,27 +56,38 @@
 
         var gcl = new GCLDebug();
         gcl.open();
-        // var iPanel = {};
-
-        // gcl.print(
-        //     [
-        //         {key: iPanel, desc: 'ipanel'},
-        //         {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'},
-        //         {key: Authentication, desc: 'Authentication'},
-        //         {key: Authentication.CTCGetConfig('UserID'), desc: 'UserID', isValue: true},
-        //         {key: sessionStorage.getItem('PortalUrl'), desc: 'url', isValue: true}
-        //     ]
-        // );
 
 
+
+        var iPanel = {};
+
+        gcl.print(
+            [
+                {key: iPanel, desc: 'ipanel'},
+                {key: iPanel.mainFrame, desc: 'ipanel.mainFrame'},
+                {key: Authentication, desc: 'Authentication'},
+                {key: Authentication.CTCGetConfig('UserID'), desc: 'UserID', isValue: true},
+                {key: sessionStorage.getItem('PortalUrl'), desc: 'url', isValue: true}
+            ]
+        );
+
+
+
+        gcl.append('name', 'lizc');
+        gcl.append('age', '29');
+
+        gcl.append('location', window.location.href);
         window.onkeydown = function (event) {
             var keycode = event.which ? event.which : event.keycode;
-
+            
             switch (keycode) {
                 case 8:
-                    gcl.append('keycode', 8);
                     gotoEPG();
                     return false;
+                case 48:
+                case 49:
+                case 50:
+                case 51:
                 break;
                 default: return true; break;
             }
