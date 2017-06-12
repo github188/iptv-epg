@@ -34,6 +34,10 @@ function $ID(id) {
     return document.getElementById(id);
 }
 
+function debug(str) {
+    console.log(str);
+}
+
 
 /* ---------------------------END Channel List --------------------------- */
 
@@ -65,6 +69,9 @@ function ChannelList() {
 
     // 当前行所在频道在频道数据中的索引
     this.channelIndex = 0;
+
+    // 当前选中的频道号
+    this.channelNo = '1';
 
     // 频道信息
     this.channels = [];
@@ -108,17 +115,21 @@ ChannelList.prototype.eventHandler = function (event) {
     var filterKeys = [38, 40];
 
     // 列表没显示情况下不响应上下键
-    if ( filterKeys.indexOf(keycode) > -1 && !that.isShow ) { return false; }
+    // if ( filterKeys.indexOf(keycode) > -1 && !that.isShow ) { return false; }
 
     // 有按键发生，重置自动隐藏计时器
     that._autoHide();
 
     switch (keycode) {
         case 38:    // up
-            that.move(1); return false;
+            that.move(1); 
+            if (!that.isShow) { that.play(); }
+            return false;
         break;
         case 40:    // down
-            that.move(-1); return false;
+            that.move(-1); 
+            if (!that.isShow) { that.play(); }
+            return false;
         break;
         case 8:     // 返回键
             if (that.isShow) { that.hide(); } return false;
@@ -140,6 +151,11 @@ ChannelList.prototype.eventHandler = function (event) {
         break;
         default: return true; break;
     }
+};
+
+// 数字键切台
+ChannelList.prototype.jump = function (index) {
+    
 };
 
 // 显示列表
@@ -190,6 +206,8 @@ ChannelList.prototype.requestChannels = function (callback) {
             if (_msgBody.ResultCode == 200) {
 
                 var channels = _msgBody.ChannelList.Channel;
+
+                debug('clist requested channels: ' + channels);
 
                 if ( channels && channels.length > 0 ) {
                     // that.error('callback: ' + callback.toString());
@@ -256,27 +274,22 @@ ChannelList.prototype.play = function () {
 
     // 获取当前频道信息
     currChannelInfo = that._getCurrChannelByIndex(currChannelIndex);
-   
+  
     if ( !currChannelInfo ) { return false; }
 
-    // 拿到用户频道 ID
-    currChannelUserID = currChannelInfo.ChannelNumber;
+    // 拿到用户频道 ID（频道号）
+    currChannelUserID = currChannelInfo.UserChannelID;
 
-    that.currPlayUrl = currChannelInfo.LiveUrl;
+    that.currPlayUrl = currChannelInfo.ChannelURL;
 
     // 播放切隐藏列表
     that.hide();
 
-    /*
-        开始播放
-        1. joinChannel，使用频道 ID 播放
-        2. setSingleMedia + playFromStart，使用直播地址播放，少用
-     */
-     // TODO[play]
+    var url = currChannelUserID;
 
-     that.mpc.play(that.currPlayUrl);
+    debug('play url or UserChannelID: ' + url);
 
-    debug('----------------- playing id: ' +  currChannelUserID );
+    that.mpc.play(url);
 };
 
 // 根据数据索引(this.dataIndex) 和 当前行索引(this.currRow) 拿到频道索引
@@ -410,7 +423,7 @@ ChannelList.prototype.refreshFoucsBgColor = function () {
 };
 
 // 列表初始化
-ChannelList.prototype.init = function (datas) {
+ChannelList.prototype.init = function (callback) {
    
     var that = this;
 
@@ -425,6 +438,8 @@ ChannelList.prototype.init = function (datas) {
         // 请求真实数据，成功执行回调初始化工作
         that.requestChannels(function () {
             that._init();
+
+            if (callback) { callback(); }
         });
     }
 };
@@ -441,7 +456,7 @@ ChannelList.prototype._init = function () {
     // 初始化数据(数据索引，当前页)
     that.dataIndex = 0;
     that.currPage = 0;
-    that.DftUserChannelID = that.channels[0].ChannelNumber; // UserChannelID
+    that.DftUserChannelID = that.channels[0].UserChannelID; // UserChannelID
 
     // 生成列表
     that._generateList(that.parent);
@@ -458,7 +473,7 @@ ChannelList.prototype._init = function () {
     that.refreshFoucsBgColor(); 
 
     // 初始化进入页面播放时的地址
-    that.currPlayUrl = that.channels[0].LiveUrl;
+    that.currPlayUrl = that.channels[0].ChannelURL;
 
     // 启动自动隐藏计时器
     that._autoHide();
@@ -599,12 +614,6 @@ ChannelList.prototype._cache = function () {
     // unuse 
 }
 
-function debug(str) {
-    return;
-    console.log(str);
-}
-
-
 /* ---------------------------END Channel List --------------------------- */
 
 
@@ -615,6 +624,7 @@ function MediaPlayController() {
     
     this.mediaStr = '';
     this.playUrl = GCL_TEST_VIDEO_DFT;
+    this.channelNo = GCL_TEST_CHAN_NO_DFT;
     this.mp = null;
     this.replayTimer = null;
 }
@@ -744,7 +754,14 @@ MediaPlayController.prototype.initMediaPlay = function () {
     this.mp.setMuteUIFlag(1);
     this.mp.setAudioVolumeUIFlag(1);
     this.mp.refreshVideoDisplay();
-    console.log('mediaUrl: ' + playUrl);
+    debug('mediaUrl: ' + playUrl);
+}
+
+MediaPlayController.prototype.displayMode = function () {
+    
+    var args = [].prototype.slice(arguments, 0);
+
+    
 }
 
 MediaPlayController.prototype.stop = function () {
@@ -756,43 +773,87 @@ MediaPlayController.prototype.stop = function () {
 
 MediaPlayController.prototype.play = function (playUrl) {
 
+    debug('playUrl - play: ' + playUrl);
+
     if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
+
+    var isChannelNo = !isNaN(playUrl);
 
     // this.mp.stop(1);
 
-    // 设置播放地址
-    this.setMediaStr(playUrl);
+    debug('is joinChannel: ' + isChannelNo);
 
-    // 或者直接用 joinChannel 用频道号去播放
-    this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
-    this.mp.playFromStart();
+    // this.setDisplayArea(200, 100, 500, 400);
 
-    // or jc
-    // this.mp.joinChannel();
+    this.mp.joinChannel(playUrl);
+
+    /*
+    if (isChannelNo) {
+        this.mp.joinChannel(playUrl);
+    } else {
+        // 设置播放地址
+        this.setMediaStr(playUrl);
+        this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
+        this.mp.playFromStart();
+    } */
 
     return this;
 };
+
+// 设置播放位置和大小：mode(0: 非全屏，1：全屏)
+MediaPlayController.prototype.setDisplayArea = function (left, top, width, height) {
+    
+    this.mp.setVideoDisplayMode(0);
+    this.mp.setVideoDisplayArea(left, top, width, height);
+    // this.mp.refreshVideoDisplay();
+
+}
 
 /* ---------------------------END MediaPlayer --------------------------- */
 
 window.onload = function () {
 
+    var played = false;
+
     // 频道列表
     window.clist = new ChannelList();
-
-    // 频道列表初始化
-    clist.init();
 
     // 播放器
     window.mpc = new MediaPlayController();
 
+    // 显示列表也需要个播放控制器对象
     clist.mpc = mpc;
 
-    // 1. 频道号播放
-    // mpc.init().setChannelID(clist.DftUserChannelID).joinChannel();
+    // DESC: 从session 拿第一个频道，如果拿到了就直接播放，避免要等请求完才能播，会黑一下问题
+    var firstChannel = JSON.parse(sessionStorage.getItem('FirstChannel'));
 
-    // 2. 频道地址播放
-    mpc.init().play(clist.currPlayUrl || mpc.playUrl);
+    debug('UserChannelID: ' + firstChannel.UserChannelID + ', firstChannel: ' + JSON.stringify(firstChannel));
+
+    if (firstChannel && firstChannel.UserChannelID) {
+        played = true;
+        mpc.init().play(firstChannel.UserChannelID);
+    } // END
+
+    // 频道列表初始化
+    clist.init(function () {
+        // 初始化完成之后执行
+
+        var channels = clist.channels;
+
+        debug('channels: ' + JSON.stringify(channels));
+
+        // var url = clist.currPlayUrl || mpc.playUrl;
+        var url = channels[0].UserChannelID;
+
+        debug('onload - UserChannelID: ' + url + ', played: ' + played);
+
+        // 如果 session 里的已经播了，就不重复播放
+        if (!played) {
+            // 2. 频道地址播放
+            mpc.init().play(url);
+        }
+    });
+
 
     window.onkeydown = function (event) {
 
@@ -810,10 +871,6 @@ window.onload = function () {
 
         return true;
     };
-
-    // 测试开关
-    var gclDebug = new GCLDebug();
-    gclDebug.open();
 }
 
 window.onunload = function () {

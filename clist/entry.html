@@ -19,13 +19,23 @@
             text-decoration: none;
             margin-left: 20px;
         }
+
+        #content {
+            position: absolute;
+            left: 130px;
+            bottom: 80px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <div id="container" class="container">
         <!-- 链接列表 -->
     </div>
+    <div id="content"></div>
+    <script src="../assets/debug/alloy_lever.js"></script>
     <script src="./cfg/config.js"></script>
+    <script src="./lib/utils.js"></script>
     <script src="./src/gcl-debug.js"></script>
     <script>
         function $(id) {
@@ -57,8 +67,6 @@
         var gcl = new GCLDebug();
         gcl.open();
 
-
-
         var iPanel = {};
 
         gcl.print(
@@ -71,8 +79,6 @@
             ]
         );
 
-
-
         gcl.append('name', 'lizc');
         gcl.append('age', '29');
 
@@ -84,15 +90,19 @@
                 case 8:
                     gotoEPG();
                     return false;
-                case 48:
-                case 49:
-                case 50:
-                case 51:
                 break;
                 default: return true; break;
             }
         }
 
+        /////////// 请求并下发播放列表
+        configChannels();
+
+        function $(id) {
+            return document.getElementById(id);
+        }
+
     </script>
+
 </body>
 </html>

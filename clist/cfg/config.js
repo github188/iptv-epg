@@ -1,5 +1,10 @@
 
-var GCL_LOCALE_DOMAIN = '113.136.46.36';
+/**
+    1. 113.136.46.36    陕西西安
+    2. 42.236.123.10    河南郑州
+
+*/
+var GCL_LOCALE_DOMAIN = '10.253.255.4';
 
 // domian -> window.document.location.href 取 ip + /clist/data/channel.json
 var GCL_CHANNEL_DATA_DOMIAN = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/data/channel.json';
@@ -11,13 +16,14 @@ var GCL_TEST_ENTRY_PAGE = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/entry.htm
 var GCL_TEST_VIDEO_MP4 = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/vod/yanguiren.mp4';
 var GCL_TEST_VIDEO_TS = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/vod/yanguiren.ts';
 var GCL_TEST_VIDEO_DFT = GCL_TEST_VIDEO_TS;
+var GCL_TEST_CHAN_NO_DFT = '1';
 
 // 测试链接
 var GCL_TEST_LINKS = [
     {   // 认证入口
-        link: 'http://113.136.46.37/iptv/portal_main.html', 
+        link: 'http://10.253.255.4/iptv/portal.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
-        text: '当前：陕西EPG'
+        text: '当前：河南EPG'
     }, {    // 首页
         link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/index_epg.html', 
         icon: '<i class="fa fa-bed" aria-hidden="true"></i>',
@@ -27,11 +33,11 @@ var GCL_TEST_LINKS = [
         icon: '<i class="fa fa-bed" aria-hidden="true"></i>',
         text: '酒店入口 - 测试 1'
     }, {    // 直播页面
-        link: 'http://113.136.46.37/iptv/clist/index2.html',
+        link: 'http://10.253.255.4/iptv/clist/index2.html',     // 113.136.46.37
         icon: '<i class="fa fa-youtube-play" aria-hidden="true"></i>',
         text: '直播页面'
     }, {    // 无MP直播页面
-        link: 'http://113.136.46.37/iptv/clist/index-bw.html',
+        link: 'http://10.253.255.4/iptv/clist/index-bw.html',
         icon: '<i class="fa fa-television" aria-hidden="true"></i>',
         text: '无MP直播页面'
     }, {
@@ -58,5 +64,15 @@ var GCL_TEST_LINKS = [
         link: 'http://113.136.46.36/iptv/portal.html',
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: '陕西: 113.136.46.36'
+    }, {
+        link: 'http://10.253.255.4/iptv/portal.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '河南: 10.253.255.4'
     }
 ];
+
+
+
+// setChannels(GCL_CHANNEL_DATAS);
+
+

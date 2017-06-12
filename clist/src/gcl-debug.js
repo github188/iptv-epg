@@ -2,10 +2,14 @@
 var GCL_DEBUG_ON = true;
 
 
-function GCLDebug(id) {
+function GCLDebug(config) {
     
+    this.config = config || {
+        id: config.id || 'gcl-test-div',
+    };
+
     this.no = 1;
-    this.id = id || 'gcl-test-div';
+    this.id = this.config.id;
     this.switch = false;
     this.created = false;
     this.style = {
@@ -25,7 +29,7 @@ function GCLDebug(id) {
     this.tag = null;
     this.refresh = null;
     this.off = null;
-    this.root = document.getElementByid('app');
+    this.root = document.getElementById('app');
 
     this.destory = function () {
         
