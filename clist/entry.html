@@ -98,6 +98,20 @@
         /////////// 请求并下发播放列表
         configChannels();
 
+        setTimeout(function () {
+            gcl.append('ChannelCount:' + Authentication.CUGetConfig('ChannelCount'));
+            for (var i = 0; i < 10; i++) {
+                gcl.append('Channel: ' + Authentication.CUGetConfig('Channel'));
+            }
+        }, 3000);
+
+        debug('ChannelCount: ' + Authentication.CUGetConfig('ChannelCount'));
+        debug('ChannelList: ' + Authentication.CUGetConfig('ChannelList'));
+
+        function debug(str) {
+            console.log(str);
+        }
+
         function $(id) {
             return document.getElementById(id);
         }

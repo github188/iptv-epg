@@ -5,7 +5,7 @@ var GCL_DEBUG_ON = true;
 function GCLDebug(config) {
     
     this.config = config || {
-        id: config.id || 'gcl-test-div',
+        id: 'gcl-test-div',
     };
 
     this.no = 1;
@@ -18,111 +18,128 @@ function GCLDebug(config) {
         top: '0px',
         backgroundColor: 'gray',
         height: '100%',
-        width: '200px',
+        width: '20%',
         fontSize: '16px',
         textAlign: 'left',
-        paddingTop: '10px',
+        // paddingTop: '2%',
         overflow: 'scroll'
     };
     this.split = '';
     this.div = null;
     this.tag = null;
-    this.refresh = null;
-    this.off = null;
-    this.root = document.getElementById('app');
+    this.btnList = null;
+    this.root = document.body;
 
     this.destory = function () {
-        
-        var rootElement = this.root || document.body;
 
-        rootElement.removeChild(this.refresh);
-        rootElement.removeChild(this.tag);
-        rootElement.removeChild(this.div);
-        rootElement.removeChild(this.off);
+        this.root.removeChild(this.tag);
+        this.root.removeChild(this.div);
+        this.root.removeChild(this.btnList);
+
+        GCL_DEBUG_ON = false;
     }
 
-    this.createRefresh = function () {
-        
-        var refresh = document.createElement('button');
+    this.createBtnList = function () {
 
-        refresh.style.position = 'absolute';
-        refresh.style.left = '40px';
-        refresh.style.bottom = '20px';
-        refresh.style.height = '30px';
-        refresh.style.backgroundColor = 'green';
-        refresh.style.borderRadius = '3px';
-        refresh.style.textAlign = 'center';
-        refresh.style.color = 'white';
-        refresh.style.padding = '0px';
+        var _this = this;
 
-        var rootElement = this.root || document.body;
+        var list = document.createElement('ul');
 
-        rootElement.appendChild(refresh);   
+        list.style.position = 'absolute';
+        list.style.right = '20%';
+        list.style.bottom = '3%';
+        list.style.padding = '0 8px';
 
-        refresh.innerHTML = '<i class="fa fa-refresh" aria-hidden="true"></i> 刷新'
+        // 按钮列表
+        var refresh = this.createBtnItem({
+            text: '刷新',
+            bgColor: 'green',
+            icon: '<i class="fa fa-refresh" aria-hidden="true"></i>',
+            handler: function (e) {
+                window.document.location.href = window.document.location.href;
+            }
+        });
 
-        this.refresh = refresh;
-        
-        this.refresh.onclick = function (e) {
-            window.document.location.href = window.document.location.href;
+        var debugOff = this.createBtnItem({
+            text: '关闭',
+            bgColor: 'red',
+            icon: '<i class="fa fa-times" aria-hidden="true"></i>',
+            handler: function (e) {
+                _this.destory();    
+            }
+        });
 
-            console.log(e.target);
-            // if (e.target)
-        };
+        var clear = this.createBtnItem({
+            text: '清空',
+            bgColor: '#3067FD',
+            icon: '<i class="fa fa-eraser" aria-hidden="true"></i>',
+            handler: function (e) {
+                _this.div.innerHTML = '';    
+            }
+        });
 
-        return this;
+        var hd = this.createBtnItem({
+            text: '高清/标清',
+            bgColor: '#FEF070',
+            icon: '<i class="fa fa-eraser" aria-hidden="true"></i>',
+            handler: function (e) {
+                _this.switchDefinition();   
+            }
+        });
+
+        list.appendChild(refresh);
+        list.appendChild(debugOff);
+        list.appendChild(clear);
+
+        this.btnList = list;
+        this.root.appendChild(list);   
+
+    };
+
+    this.createBtnItem = function (config) {
+        var that = this;
+
+        var item = document.createElement('li');
+
+        // item.style.float = 'left';
+        item.style.marginTop = '8px';
+        item.style.listStyle = 'none';
+        item.style.width = '80px';
+        item.style.height = '30px';
+
+        // 按钮
+        var btn = document.createElement('button');
+        btn.style.backgroundColor = config.bgColor;
+        btn.style.width = '100%';
+        btn.style.height = '100%';
+        // btn.style.padding = '4px';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.innerHTML = config.icon + ' ' + config.text; 
+        btn.onclick = config.handler;
+        item.appendChild(btn);
+
+        return item;
     };
 
     this.createTag = function () {
-        
         var tag = document.createElement('span');
         tag.className = 'test-tag';
 
         tag.style.position = 'absolute';
-        tag.style.right = '10px';
-        tag.style.bottom = '20px';
+        tag.style.left = '10%';
+        tag.style.bottom = '2%';
         tag.style.backgroundColor = 'red';
         tag.style.color = 'white';
         tag.style.fontSize = '12px';
         tag.style.borderRadius = '5px';
         tag.style.padding = '5px';
         tag.style.zIndex = 50;
-
-        var rootElement = this.root || document.body;
-        rootElement.appendChild(tag);
-
         tag.innerHTML = 'Attention Please!(Testing...)';
 
         this.tag = tag;
-
-        return this;
+        return tag;
     };
-
-    this.createOff = function () {
-        var off = document.createElement('button');
-
-        off.style.position = 'absolute';
-        off.style.left = '100px';
-        off.style.bottom = '20px';
-        off.style.height = '30px';
-        off.style.backgroundColor = 'red';
-        off.style.borderRadius = '3px';
-        off.style.textAlign = 'center';
-        off.style.color = 'white';
-
-        var rootElement = this.root || document.body;
-        rootElement.appendChild(off);
-
-        off.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i> DEBUG OFF'
-
-        this.off = off;
-        var _this = this;
-        this.off.onclick = function (e) {
-            _this.destory();
-        };
-
-        return this;
-    }
 
     this.setSplit = function (split) {
         this.split = split;
@@ -136,16 +153,15 @@ function GCLDebug(config) {
         for (var prop in this.style) {
             info.style[prop] = this.style[prop];
         }
+
+        var tag = this.createTag();
+        info.appendChild(tag);
         
         document.body.appendChild(info);
 
         this.div = info;
-
         this.created = true;
-
-        this.createTag();
-        this.createRefresh();
-        this.createOff();
+        this.createBtnList();
 
         return this;
     };
@@ -154,7 +170,10 @@ function GCLDebug(config) {
 
         if (!GCL_DEBUG_ON) { return; }
 
-        this.div.innerHTML += '<input class="test-content" type="text" value="[' + (this.split ? this.split : this.no++) + ']' + str + '" />' 
+        this.div.innerHTML += '<input class="test-content" type="text" value="[' 
+            + (this.split ? this.split : this.no++) + ']' + str + '"'
+            + 'style="width:100%"'
+            + '/>' 
             + '<br>';
     };
 
@@ -191,7 +210,7 @@ function GCLDebug(config) {
     this.append = function (key, value) {
         // this.no++;
 
-        this._print(key + ': ' + value); 
+        this._print(key + (value ? ': ' + value : ''));
 
         return this;  
     };
@@ -202,6 +221,7 @@ function GCLDebug(config) {
             this.create();
         }
 
+        GCL_DEBUG_ON = true;
         this.switch = true;
     };
 

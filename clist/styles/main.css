@@ -26,6 +26,15 @@ body {
 
     margin-left: 45px;
     background-color: #856B52;
+/*
+    -webkit-animation: toggleList 0.5s ease-in;
+    -o-animation: toggleList 0.5s ease-in;
+    animation: toggleList 0.5s ease-in;*/
+}
+
+@keyframes toggleList {
+    0% { opacity: 0; margin-left: 0px; }
+    100% { opacity: 1; margin-left: 45px; }
 }
 
 /* 列表项，和上下箭头区通用部分 */

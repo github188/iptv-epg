@@ -35,7 +35,8 @@ function $ID(id) {
 }
 
 function debug(str) {
-    console.log(str);
+    // gcl.append(str);
+    // console.log(str);
 }
 
 
@@ -97,6 +98,9 @@ function ChannelList() {
     // 频道列表服务器地址
     this.listServerAddr = GCL_LOCALE_DOMAIN;
 
+    // 第一个频道
+    this.first = null;
+
     // 播放器控制对象
     this.mpc = null;
 }
@@ -112,7 +116,7 @@ ChannelList.prototype.eventHandler = function (event) {
     var keycode = event.which || event.keycode,
         that = this;
 
-    var filterKeys = [38, 40];
+    // var filterKeys = [38, 40];
 
     // 列表没显示情况下不响应上下键
     // if ( filterKeys.indexOf(keycode) > -1 && !that.isShow ) { return false; }
@@ -132,8 +136,16 @@ ChannelList.prototype.eventHandler = function (event) {
             return false;
         break;
         case 8:     // 返回键
-            if (that.isShow) { that.hide(); } return false;
+            if (that.isShow) { that.hide(); }
+            else {
+                var mainUrl = sessionStorage.getItem('Main2ChannelURL');
+                window.location.href = mainUrl || '../../epggroup_mains/main_test/main.html';
+            }
+            return false;
         break;
+        // 上下页键处理：
+        // 1. 列表显示是翻页
+        // 2. 不显示时切换频道
         case 33:    // test
         case 34:
             window.document.location.href = GCL_TEST_ENTRY_PAGE;
@@ -177,6 +189,66 @@ ChannelList.prototype.setChannelDataDomain = function () {
     return this;
 }
 
+// 发送post请求频道列表
+ChannelList.prototype.postChannels = function (callback) {
+
+    var that = this;
+    var userID = sessionStorage.getItem("userid") || Authentication.CUGetConfig("UserID");
+    var token = sessionStorage.getItem("Token") || Authentication.CUGetConfig('UserToken');
+    var lang = sessionStorage.getItem("currLangCode") || 'chi';
+    var tmpObj = {
+        "Message": {
+            "MessageType": "GetChannelListReq",
+            "MessageBody": {
+                "UserID": userID,
+                "EpgGroupID": "",
+                "LangCode": lang,
+                "Token": token,
+            }
+        }
+    };
+
+    this.isRequestStatus == true;
+
+    if ( window.XMLHttpRequest ) {
+        xhr = new XMLHttpRequest();
+    } else {
+        xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+
+    var relativePath = sessionStorage.getItem("relativePath") || '';
+
+    xhr.open('post', relativePath + '/epgservice/index.php?MessageType=GetChannelListReq', true);
+    xhr.onreadystatechange = function () {
+        debug('ready: ' + xhr.readyState + ', status: ' + xhr.status);
+        if ( xhr.readyState === 4 && xhr.status === 200 ) {
+
+            var _data = JSON.parse(xhr.responseText);
+            var _msgBody = _data.Message.MessageBody;
+
+            debug('result: ' + _msgBody.ResultCode);
+            if (_msgBody.ResultCode == 200) {
+
+                var channels = _msgBody.ChannelList.Channel;
+
+                if ( channels && channels.length > 0 ) {
+                    that.channels = that.convertChannels(channels);// [].slice.call(channels, 0);
+                    that.first = that.channels[0];
+                    debug('post channel count: ' + that.channels.length);
+                    if (callback) { callback(); }
+                } else {
+                    that.channels = [];
+                    debug('没有频道数据！');
+                }
+            }
+
+            this.isRequestStatus = false;
+        }
+    };
+
+    xhr.send(JSON.stringify(tmpObj));
+};
+
 // 请求频道信息
 ChannelList.prototype.requestChannels = function (callback) {
 
@@ -193,11 +265,9 @@ ChannelList.prototype.requestChannels = function (callback) {
         xhr = new ActiveXObject('Microsoft.XMLHTTP');
     }
 
-    that.error('addr: ' + that.listServerAddr);
-
     xhr.open('get', that.listServerAddr, true);
     xhr.onreadystatechange = function () {
-        that.error('ready: ' + xhr.readyState + ', status: ' + xhr.status);
+        debug('ready: ' + xhr.readyState + ', status: ' + xhr.status);
         if ( xhr.readyState === 4 && xhr.status === 200 ) {
 
             var _data = JSON.parse(xhr.responseText);
@@ -210,12 +280,11 @@ ChannelList.prototype.requestChannels = function (callback) {
                 debug('clist requested channels: ' + channels);
 
                 if ( channels && channels.length > 0 ) {
-                    // that.error('callback: ' + callback.toString());
                     that.channels = [].slice.call(channels, 0);
                     if (callback) { callback(); }
                 } else {
                     that.channels = [];
-                    that.error('没有频道数据！');
+                    debug('没有频道数据！');
                 }
             }
 
@@ -224,41 +293,6 @@ ChannelList.prototype.requestChannels = function (callback) {
     };
 
     xhr.send(null);
-
-    /*
-    // '/epgservice/index.php?MessageType=GetChannelListReq'
-    $.ajax({
-        type: 'GET',
-        url: that.listServerAddr,
-        // data: JSON.stringify(tmpObj),
-        complete: function(data) {
-            if (data.status === 200) {
-                var _data = JSON.parse(data.response);
-                var _msgBody = _data.Message.MessageBody;
-                if (_msgBody.ResultCode == 200) {
-
-                    var channels = _msgBody.ChannelList.Channel;
-                    if ( channels && channels.length > 0 ) {
-                        that.channels = [].slice.call(channels, 0);
-                        callback && callback();
-                    } else {
-                        that.channels = [];
-                        that.error('没有频道数据！');
-                    }
-                } else {
-                    that.error("请求数据失败");
-                }
-            } else {
-                that.error("网络请求失败");
-            }
-
-            that.isRequestStatus = false;
-            that.showLoading = false;
-        },
-        error: function(err) {
-            that.error(err);
-        },
-    }); */
 }
 
 // 播放当前直播
@@ -286,6 +320,7 @@ ChannelList.prototype.play = function () {
     that.hide();
 
     var url = currChannelUserID;
+    // var url = that.currPlayUrl;
 
     debug('play url or UserChannelID: ' + url);
 
@@ -300,46 +335,9 @@ ChannelList.prototype._getCurrChannelIndex = function () {
 // 通过索引获取当前频道
 ChannelList.prototype._getCurrChannelByIndex = function (index) {
 
-    if ( index < 0 ) { this.error('频道号不存在！'); return null; }
+    if ( index < 0 ) { debug('频道号不存在！'); return null; }
 
     return this.channels && this.channels[index]; 
-};
-
-// 频道列表错误处理
-ChannelList.prototype.error = function (msg, code, handler) {
-
-    var errorContent = '',
-        width = 350,
-        left = (document.body.clientWidth - width) / 2,
-        tmpV = null;
-
-    if ( tmpV = $ID('cl-error-tips') ) {
-
-        tmpV.innerHTML = msg;
-
-        return false;
-    }
-
-    errorContent = '<div id="cl-error-tips" style="position:absolute;'
-        + 'left:' + left
-        + 'px;top:40%;'
-        + 'width:' + width 
-        + 'px;height:80px;background-color:gray;border-radius:2px;'
-        + 'text-align:center;line-height:80px;color:white;font-size:22px;'
-        + '">'
-        + '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>'
-        + '&nbsp;&nbsp;' + msg
-        + '</div>';
-
-    var div = document.createElement('div');
-    document.body.appendChild(div);
-    div.innerHTML = errorContent;
-
-    // $('body').append($(errorContent));
-
-    setTimeout(function () {
-        div.parentNode.removeChild(div);
-    }, 2000);
 };
 
 /**
@@ -382,7 +380,7 @@ ChannelList.prototype.move = function (direction) {
     }
 
     // 输出方向，数据索引，和当前行
-    debug('msg: ' + 'd/' + direction + ', currRow/' + that.currRow + ', dataIndex/' + that.dataIndex);
+    // debug('msg: ' + 'd/' + direction + ', currRow/' + that.currRow + ', dataIndex/' + that.dataIndex);
 
     // 翻页刷新数据
     if ( needRound ) { that.refreshData(); }
@@ -435,14 +433,52 @@ ChannelList.prototype.init = function (callback) {
         that._init();
     } else {
 
-        // 请求真实数据，成功执行回调初始化工作
-        that.requestChannels(function () {
-            that._init();
+        var channels = JSON.parse(sessionStorage.getItem('AllChannels'));
+        var first = JSON.parse(sessionStorage.getItem('FirstChannel'));
 
+        console.log(JSON.stringify(first));
+
+        debug('first: ' + JSON.stringify(first));
+        debug('init chl count: ' + Authentication.CUGetConfig('ChannelCount'));
+
+        // 先去 session 里的，如果有，就不需要再请求
+        if (first && channels && channels.length > 0) {
+            that.channels = channels;
+            that.first = first;
+            that._init();
             if (callback) { callback(); }
-        });
+        } else {
+            // 请求真实数据，成功执行回调初始化工作
+            that.postChannels(function () {
+                that._init();
+                if (callback) { callback(); }
+            });
+        }
+
     }
 };
+
+ChannelList.prototype.convertChannels = function () {
+        
+    var that = this;
+
+    var len = channels.length;
+    debug('cuget count: ' + Authentication.CUGetConfig('ChannelCount'));
+
+    var obj = null, channel = null, listChannels = [];
+    for (var i = 0; i < len; i++) {
+        channel = channels[i];
+
+        listChannels.push({
+            ChannelID: i + 1,
+            ChannelName: channel.ChannelName,
+            UserChannelID: channel.ChannelNumber,
+            ChannelURL: channel.LiveUrl
+        });
+    }
+
+    that.channels = [].slice.call(listChannels, 0);
+}
 
 // 内部初始化函数
 ChannelList.prototype._init = function () {
@@ -516,12 +552,6 @@ ChannelList.prototype.refreshData = function () {
         // 没有数据可刷新了，结束刷新
         if ( that.dataIndex === count - lastRows
             && index >= lastRows ) { debug('over');return false; };
-
-        debug('refreshData: ' 
-            + 'dataIndex/' + that.dataIndex
-            + ', lastRows/' + lastRows
-            + ', index/' + index
-            + ', count/' + count);
 
         channelInfo = that.channels[dataIndex];
 
@@ -645,6 +675,7 @@ MediaPlayController.prototype.init = function () {
 // 频道列表错误处理
 MediaPlayController.prototype.error = function (msg, code, handler) {
 
+    return;
     var errorContent = '',
         width = 350,
         left = (document.body.clientWidth - width) / 2;
@@ -754,7 +785,6 @@ MediaPlayController.prototype.initMediaPlay = function () {
     this.mp.setMuteUIFlag(1);
     this.mp.setAudioVolumeUIFlag(1);
     this.mp.refreshVideoDisplay();
-    debug('mediaUrl: ' + playUrl);
 }
 
 MediaPlayController.prototype.displayMode = function () {
@@ -785,9 +815,8 @@ MediaPlayController.prototype.play = function (playUrl) {
 
     // this.setDisplayArea(200, 100, 500, 400);
 
-    this.mp.joinChannel(playUrl);
+    // this.mp.joinChannel(playUrl);
 
-    /*
     if (isChannelNo) {
         this.mp.joinChannel(playUrl);
     } else {
@@ -795,7 +824,7 @@ MediaPlayController.prototype.play = function (playUrl) {
         this.setMediaStr(playUrl);
         this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
         this.mp.playFromStart();
-    } */
+    }
 
     return this;
 };
@@ -824,34 +853,23 @@ window.onload = function () {
     // 显示列表也需要个播放控制器对象
     clist.mpc = mpc;
 
-    // DESC: 从session 拿第一个频道，如果拿到了就直接播放，避免要等请求完才能播，会黑一下问题
-    var firstChannel = JSON.parse(sessionStorage.getItem('FirstChannel'));
-
-    debug('UserChannelID: ' + firstChannel.UserChannelID + ', firstChannel: ' + JSON.stringify(firstChannel));
-
-    if (firstChannel && firstChannel.UserChannelID) {
-        played = true;
-        mpc.init().play(firstChannel.UserChannelID);
-    } // END
-
     // 频道列表初始化
     clist.init(function () {
         // 初始化完成之后执行
 
         var channels = clist.channels;
 
-        debug('channels: ' + JSON.stringify(channels));
+        console.log(channels);
 
-        // var url = clist.currPlayUrl || mpc.playUrl;
         var url = channels[0].UserChannelID;
+        // var url = channels[0].ChannelURL;
 
-        debug('onload - UserChannelID: ' + url + ', played: ' + played);
-
+        debug('init url: ' + url);
         // 如果 session 里的已经播了，就不重复播放
-        if (!played) {
+        // if (!played) {
             // 2. 频道地址播放
             mpc.init().play(url);
-        }
+        // }
     });
 
 

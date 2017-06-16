@@ -68,6 +68,16 @@ var GCL_TEST_LINKS = [
         link: 'http://10.253.255.4/iptv/portal.html',
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: '河南: 10.253.255.4'
+    }, {
+        link: 'http://202.99.114.71:40001/hnlthotel/homePage.html?'
+            + 'userId=4322&carrierId=204&industry=hotel&state=1&categoryid=dc00005223&'
+            + 'returnurl=http%3A%2F%2F10.253.255.4%2Fiptv%2Fportal.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '河南IPTV'
+    }, {
+        link: 'http://10.253.255.4/iptv/clist/play.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '测试播放'
     }
 ];
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>动画测试页面</title>
+	<style type="text/css">
+		* {
+			padding: 0;
+			margin: 0;
+		}
+
+		.list {
+			width: 100px;
+			height: 300px;
+			position: absolute;
+			background-color: red;
+			left: 2px;
+			top: 0px;
+
+			animation: testIn 1.0s;
+		}
+
+		@keyframes testIn {
+			0% {
+				opacity: 0;
+			}
+
+			100% {
+				opacity: 1;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div class="list" id="list"></div>
+
+	<script>
+		
+		window.onkeydown = function (event) {
+			var keycode = event.which ? event.which : event.keycode;
+
+			if ( keycode === 8 ) {
+				window.location.href = window.location.href;
+				return false;
+			}
+		}
+
+		var list = document.getElementById('list');
+		list.innerHTML = typeof(rquestAnimationFrame);
+	</script>
+</body>
+</html>
