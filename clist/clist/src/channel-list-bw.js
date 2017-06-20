@@ -23,12 +23,28 @@
 function $ID(id) {
     return document.getElementById(id);
 }
+function scroll(){
+    var info = document.getElementById('info');
+    var div = info.getElementsByTagName('div')[0];
+    var p = document.getElementsByTagName('p')[0];
+    var p_w = p.offsetWidth;
+    var div_w = info.offsetWidth;
+    if(div_w > p_w){ return false; }
+    div.innerHTML += div.innerHTML;
 
+    setInterval(function(){
+        if(p_w <= info.scrollLeft){
+            info.scrollLeft -= p_w;
+        } else {
+            info.scrollLeft++;
+        }
+    }, 30);
+}
 
 /* ---------------------------END Channel List --------------------------- */
 
 function ChannelList() {
-   
+
     // 列表总行数 
     this.rows = 10;
 
@@ -51,7 +67,7 @@ function ChannelList() {
     this.totalPages = '';
 
     // 当前列表页
-    this.currPage = 0;
+    this.currPage = 1;
 
     // 当前行所在频道在频道数据中的索引
     this.channelIndex = 0;
@@ -82,6 +98,10 @@ function ChannelList() {
 
     // 播放器控制对象
     this.mpc = null;
+
+    this.language = 0; // 0 - chi, 1 - eng
+
+    this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown']
 }
 
 /**
@@ -110,6 +130,13 @@ ChannelList.prototype.eventHandler = function (event) {
         case 40:    // down
             that.move(-1); return false;
         break;
+        // 模拟翻页
+        case 37:    // left
+            that.move(-1, true);
+        break;
+        case 39:    // right
+            that.move(1, true);
+        break;
         case 8:     // 返回键
             if (that.isShow) { that.hide(); } return false;
         break;
@@ -133,15 +160,30 @@ ChannelList.prototype.eventHandler = function (event) {
 
 // 显示列表
 ChannelList.prototype.show = function () {
-    this.parent.style.display = 'block';
+    // this.parent.style.display = 'block';
     this.isShow = true;
+    // this.fadeIn(); 
+
+    fadeFn(this.parent, 'in', 0, 0)();
 };
 
 // 隐藏列表
 ChannelList.prototype.hide = function () {
-    this.parent.style.display = 'none';
+    // this.parent.style.display = 'none';
     this.isShow = false;
+    // this.fadeOut();
+    fadeFn(this.parent, 'out', 100, 1)();
 }
+
+// 列表淡入效果
+ChannelList.prototype.fadeIn = function () {
+    return fadeFn(this.parent, 'in', 0, 0);   
+};
+
+// 列表淡出效果
+ChannelList.prototype.fadeOut = function () {
+    return fadeFn(this.parent, 'out', 100, 1);   
+};
 
 ChannelList.prototype.setChannelDataDomain = function () {
 
@@ -320,18 +362,25 @@ ChannelList.prototype.error = function (msg, code, handler) {
 };
 
 /**
- * 上下移动焦点
+ * 上下移动焦点或者上下页键翻页
  * @param  {[type]} direction [description]
  * @return {[type]}           [description]
  */
-ChannelList.prototype.move = function (direction) {
+ChannelList.prototype.move = function (direction, isTurnPage) {
 
     var that = this,
         count = that.channels.length,
         // 上下到头是否需要翻页标识
         needRound = false; 
 
+    // 移动焦点
     if ( direction !== 1 && direction !== -1 ) { return false; }
+
+    // 翻页
+    if (typeof(isTurnPage) === 'boolean' && isTurnPage) {
+        that.turnPage(direction);
+        return;
+    }
 
     // 焦点在第一页第一行，不响应上键
     if ( direction > 0 && that.currRow <= 0 && that.dataIndex <= 0 ) {
@@ -347,13 +396,15 @@ ChannelList.prototype.move = function (direction) {
     direction > 0 ? that.currRow-- : that.currRow++;
 
     if ( direction < 0 && that.currRow >= that.rows ) { // 下到头，向下翻页
+        that.currPage++;
         that.currRow = 0; 
         that.dataIndex += that.rows;    // 数据索引加一页行数，及防止越界
         if ( that.dataIndex >= count ) { that.dataIndex = count - 1; }
         needRound = true;
     } else if ( direction > 0 && that.currRow < 0 ) { // 上到头，向上翻页
+        that.currPage--;
         that.currRow = that.rows - 1;
-        that.dataIndex -= that.rows;    // 数据说因减一页行数，及防止越界
+        that.dataIndex -= that.rows;    // 数据索引减一页行数，及防止越界
         if ( that.dataIndex <= 0 ) { that.dataIndex = 0; }
         needRound = true;
     }
@@ -364,8 +415,40 @@ ChannelList.prototype.move = function (direction) {
     // 翻页刷新数据
     if ( needRound ) { that.refreshData(); }
 
+    // console.log('totalpage: ' + that.totalPages + ', currpage: ' + that.currPage);
+
     // 刷新行焦点
     that.refreshFoucsBgColor();
+};
+
+// 翻页
+ChannelList.prototype.turnPage = function (direction) {
+   
+    if (direction !== 1 && direction !== -1) { return false; }
+
+    var that = this;
+    var count = that.channels.length;
+
+    if (direction > 0) {
+        if (that.currPage === that.totalPages) { return false; }
+        that.currPage++;
+        that.dataIndex += that.rows;    // 数据索引加一页行数，及防止越界
+        if ( that.dataIndex >= count ) { that.dataIndex = count - 1; }
+    } else if (direction < 0) {
+        if (that.currPage === 1) { return false; }
+        that.currPage--;
+        that.dataIndex -= that.rows;    // 数据索引减一页行数，及防止越界
+        if ( that.dataIndex <= 0 ) { that.dataIndex = 0; }
+    }
+
+    that.currRow = 0;
+
+    that.refreshData();
+
+    // 刷新行焦点
+    that.refreshFoucsBgColor();
+
+    return false; 
 };
 
 /**
@@ -430,7 +513,7 @@ ChannelList.prototype._init = function () {
 
     // 初始化数据(数据索引，当前页)
     that.dataIndex = 0;
-    that.currPage = 0;
+    that.currPage = 1;
     that.DftUserChannelID = that.channels[0].ChannelNumber; // UserChannelID
 
     // 生成列表
@@ -457,7 +540,7 @@ ChannelList.prototype._init = function () {
 
 // 6秒后自动隐藏
 ChannelList.prototype._autoHide = function () {
-
+    return;
     var that = this;
 
     clearTimeout(that.autoHideTimer);
@@ -560,6 +643,7 @@ ChannelList.prototype._generateList = function (styles) {
     if ( that.isGenerated ) { debug('dont repeat;');return; }
 
     contents += '<div id="clist-top">'
+             + '<span id="page-tip">' + this.tips[this.language] + '</span>'
              + '<i class="fa fa-angle-up fa-2x" aria-hidden="true"></i>'
              + '</div>';
 
@@ -786,9 +870,6 @@ window.onload = function () {
     window.onkeydown = function (event) {
         clist.eventHandler(event);
     };
-
-    var gclDebug = new GCLDebug();
-    gclDebug.open();
 }
 
 window.onunload = function () {
@@ -804,3 +885,50 @@ window.onunload = function () {
 }
 
 
+/**
+ * 淡入淡出动画
+ * @param  {DOMElement} 需要执行动画的元素
+ * @param  {[type]} inout   取值为 'in'：淡入，'out'：淡出
+ * @param  {[type]} refV    参考值，用来递增递减，最后值会赋值给元素的 opacity
+ * @param  {[type]} opacity 元素的初始透明度
+ * @return {[type]}
+ */
+function fadeFn(el, inout, refV, opacity) {
+
+    var value = refV;
+    var timer = null;
+
+    if (inout === 'in') {
+        el.style.display = 'block';
+    }
+
+    el.style.opacity = opacity;
+
+    return function fade(start, end, stepV) {
+        var startV = start || 0;
+        var endV = end || 100;
+        var step = stepV || 1;
+        var condition = inout === 'in' ? value >= endV : value <= startV;
+        var args = arguments;
+        console.log(condition)
+        if (condition) {
+            el.style.opacity = value / 100;
+            if (inout === 'out') {
+                el.style.display = 'none';
+            }
+            clearTimeout(timer);
+            return;
+        }
+
+        value = inout === 'in' ? value + step : value - step;
+
+        el.style.opacity = value / 100;
+
+            console.log(el.style.opacity);
+
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            fade(start, end, stepV);
+        }, 10); 
+    };
+};

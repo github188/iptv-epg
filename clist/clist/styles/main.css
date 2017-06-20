@@ -27,9 +27,9 @@ body {
     margin-left: 45px;
     background-color: #856B52;
 /*
-    -webkit-animation: toggleList 0.5s ease-in;
-    -o-animation: toggleList 0.5s ease-in;
-    animation: toggleList 0.5s ease-in;*/
+    -webkit-animation: toggleList 0.5s ease-in-out;
+    -o-animation: toggleList 0.5s ease-in-out;
+    animation: toggleList 0.5s ease-in-out;*/
 }
 
 @keyframes toggleList {
@@ -60,12 +60,12 @@ body {
 }
 
 .channel-info span {
-
+    display: inline-block;
     height: 100%;
     color: #AAACAB;
-    font-size: 30px;
+    font-size: 28px;
     line-height: 48px;
-    text-align: center;
+    /*text-align: left;*/
 }
 /*
 .channel-info:hover {
@@ -77,12 +77,20 @@ body {
     width: 20%;
     display: block;
     float: left;
+    text-align: center;
 }
 
 .channel-name {
     width: 80%;
     display: inline-block;
     float: right;
+    text-align: left;
+    text-indent: 5px;
+    /*overflow: hidden;*/
+    display:block;
+    white-space:nowrap; 
+    overflow:hidden; 
+    text-overflow:ellipsis;
 }
 
 /* 列表顶部和底部箭头 */
@@ -91,6 +99,17 @@ body {
     color: #856B52;
     text-align: center;
     line-height: 59px;
+}
+
+#clist-top {
+    position: relative;
+}
+
+/* 翻页提示 */
+#page-tip {
+    position: absolute;
+    left: 47px;
+    bottom: -15px;
 }
 
 /* 焦点行背景 */

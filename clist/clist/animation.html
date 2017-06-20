@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>动画测试页面</title>
+	<style type="text/css">
+		* {
+			padding: 0;
+			margin: 0;
+		}
+
+		.list {
+			display: none;
+			width: 100px;
+			height: 300px;
+			position: absolute;
+			background-color: red;
+			left: 12px;
+			top: 22px;
+		}
+		#btn-list {
+			position: absolute;
+			right: 0;
+			top: 80px;
+		}
+
+		button {
+			width: 60px;
+			height: 30px;
+			background-color: #FC5A64;
+			border: none;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="list" id="list"></div>
+
+	<div id="btn-list">
+		<button onClick="window.location.href = window.location.href">刷新</button><br>
+		<br>
+		<button onClick="$('#list').fadeIn();">淡入</button><br>
+		<br>
+		<button onClick="$('#list').fadeOut();">淡出</button><br>
+	</div>
+	
+	<!-- <script src="./lib/jquery-2.2.4.js"></script> -->
+	<script>
+
+		var timer = null;	
+		var value = 0;
+		var list = $('list');
+
+		function show() {
+			fadeFn(list, 'in', 0, 0)();
+		}
+
+		function hide() {
+			fadeFn(list, 'out', 100, 1)();
+		}
+
+		function fadeFn(el, inout, refV, opacity) {
+
+			var value = refV;
+
+			if (inout === 'in') {
+				el.style.display = 'block';
+			}
+
+			el.style.opacity = opacity;
+
+			return function fade(start, end, stepV) {
+				var startV = start || 0;
+				var endV = end || 100;
+				var step = stepV || 1;
+				var condition = inout === 'in' ? value >= endV : value <= startV;
+				var args = arguments;
+				console.log(condition)
+				if (condition) {
+					el.style.opacity = value / 100;
+					if (inout === 'out') {
+						el.style.display = 'none';
+					}
+					clearTimeout(timer);
+					return;
+				}
+
+				value = inout === 'in' ? value + step : value - step;
+
+				el.style.opacity = value / 100;
+
+					console.log(el.style.opacity);
+
+				clearTimeout(timer);
+				timer = setTimeout(function () {
+					fade(start, end, stepV);
+				}, 10);	
+			};
+
+		};
+
+
+
+		// function fade(el, inout, startV, endV, step) {
+		// 	var condition = inout === 'in' ? value >= endV : value <= startV;
+		// 	var args = arguments;
+		// 	console.log(condition)
+		// 	if (condition) {
+		// 		el.style.opacity = value / 100;
+		// 		if (inout === 'out') {
+		// 			el.style.display = 'none';
+		// 		}
+		// 		clearTimeout(timer);
+		// 		return;
+		// 	}
+
+		// 	value = inout === 'in' ? value + step : value - step;
+
+		// 	el.style.opacity = value / 100;
+
+		// 		console.log(el.style.opacity);
+
+		// 	clearTimeout(timer);
+		// 	timer = setTimeout(function () {
+		// 		fade(el, inout, startV, endV, step);
+		// 	}, 10);
+		// }
+
+		function decrease() {
+
+			if (inc <= 0) { 
+				console.log(inc / 100)
+				$('list').style.opacity = inc / 100;
+				$('list').style.display = 'none';
+				clearTimeout(timer); 
+				return;
+			}
+
+			inc--;
+			$('list').style.opacity = inc / 100;
+			// console.log(inc)
+			clearTimeout(timer);
+			timer = setTimeout(function () {
+				decrease();
+			}, 10);		
+		}
+
+		function increase() {
+
+			if (inc >= 100) { 
+				console.log(inc / 100)
+				$('list').style.opacity = inc / 100;
+				clearTimeout(timer); 
+				return;
+			}
+
+			inc++;
+			$('list').style.opacity = inc / 100;
+			// console.log(inc)
+			clearTimeout(timer);
+			timer = setTimeout(function () {
+				increase();
+			}, 10);		
+		}	
+
+		function $(id) {
+			return document.getElementById(id);
+		}
+	</script>
+</body>
+</html>

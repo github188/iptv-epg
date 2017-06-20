@@ -20,6 +20,7 @@ var GCL_TEST_CHAN_NO_DFT = '1';
 
 // 测试链接
 var GCL_TEST_LINKS = [
+/*
     {   // 认证入口
         link: 'http://10.253.255.4/iptv/portal.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
@@ -78,6 +79,17 @@ var GCL_TEST_LINKS = [
         link: 'http://10.253.255.4/iptv/clist/play.html',
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: '测试播放'
+    }
+*/
+
+    {   // 认证入口
+        link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/portal.html', 
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '云南EPG'    
+    }, {   // 播放页面
+        link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/clist/play.html', 
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: 'play.html'    
     }
 ];
 

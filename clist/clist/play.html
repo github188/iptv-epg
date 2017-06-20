@@ -11,8 +11,13 @@
 
 	<script src="../assets/debug/alloy_lever.js"></script>
 	<script>
-		Authentication.CUSetConfig('ChannelCount', 1);
-		Authentication.CUSetConfig('Channel','ChannelID="1",ChannelName="CCTV-1",UserChannelID="1",ChannelURL="igmp://224.1.1.54:10392",TimeShift="1",TimeShiftLength="10800",ChannelSDP="igmp://224.1.1.54:10392",TimeShiftURL="",ChannelType="1",IsHDChannel="2",PreviewEnable="0",ChannelPurchased="0",ChannelLocked="0",ChannelLogURL="",PositionX="null",PositionY="null",BeginTime="null",Interval="null",Lasting="null",ActionType="1",FCCEnable="0",ChannelFECPort="0"');
+	// 	Authentication.CUSetConfig('ChannelCount', 1);
+	// 	Authentication.CUSetConfig('Channel','ChannelID="1",ChannelName="CCTV-1",UserChannelID="1",ChannelURL="igmp://224.1.1.54:10392",TimeShift="1",TimeShiftLength="10800",ChannelSDP="igmp://224.1.1.54:10392",TimeShiftURL="",ChannelType="1",IsHDChannel="2",PreviewEnable="0",ChannelPurchased="0",ChannelLocked="0",ChannelLogURL="",PositionX="null",PositionY="null",BeginTime="null",Interval="null",Lasting="null",ActionType="1",FCCEnable="0",ChannelFECPort="0"');
+
+		function getProgramInfo(contentID) {
+			
+		}
+
 
 		function debug(str) {
 			console.log(str);
@@ -147,7 +152,6 @@
 		    this.mp.setMuteUIFlag(1);
 		    this.mp.setAudioVolumeUIFlag(1);
 		    this.mp.refreshVideoDisplay();
-		    debug('mediaUrl: ' + playUrl);
 		}
 
 		MediaPlayController.prototype.stop = function () {
@@ -169,12 +173,12 @@
 
 		    debug('is joinChannel: ' + isChannelNo);
 
-		    this.mp.joinChannel(playUrl);
+		    // this.mp.joinChannel(playUrl);
 
 		    // 设置播放地址
-		    // this.setMediaStr(playUrl);
-		    // this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
-		    // this.mp.playFromStart();
+		    this.setMediaStr(playUrl);
+		    this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
+		    this.mp.playFromStart();
 
 		    // this.setDisplayArea(200, 100, 500, 400);
 
@@ -195,12 +199,13 @@
 
 		// 
 		// 'igmp://224.1.1.54:10392'
-		var url = 'http://10.253.255.4/iptv/clist/vod/yanguiren.ts';
+		var url = 'http://182.245.29.146:8089/iptv2017/LOVEIT/201704/20170428/90000001000000025374837847200410/90000001000000025374837847200410.m3u8?playType=vod&startProgramDate=1497859862962&expiredTime=10&checkKey=875e2ed99fa9dbeb57325b0e961c507d'
+		// var url = 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/clist/vod/yanguiren.ts';
 
-		mpc.init().play('1');
+		mpc.init().play(url);
 
-		console.log(Authentication.CUGetConfig('ChannelCount'));
-		console.log(Authentication.CUGetConfig('Channel'));
+		// console.log(Authentication.CUGetConfig('ChannelCount'));
+		// console.log(Authentication.CUGetConfig('Channel'));
 
 		window.onkeydown = function (event) {
 
@@ -216,6 +221,8 @@
 
 		    if (keycode === 8) {
 		    	window.location.href = window.location.href;
+		    } else if (keycode === 181) {
+		    	window.location.href = 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/clist/entry.html';
 		    }
 
 		    return true;
