@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Test Debug</title>
+    <link rel="stylesheet" href="../styles/font-awesome.min.css">
+</head>
+<style>
+	#a3 {
+		width: 100px;
+		heigh
+	}
+</style>
+<body>
+<div id="a3"></div>
+	<!-- <script src="./gcl-debug.js"></script> -->
+	<script>
+	function EPGLog(params = {
+	    OperationCode: '',
+	    Detail: '',
+	    condition: ''
+	}) {
+
+		console.log(params);
+	}
+
+	EPGLog({
+		OperationCode: 'hello',
+		Detail: 'ddd',
+		condition: sessionStorage.getItem('MathPath') === 'test',
+	});
+
+	sessionStorage.setItem('MathPath', 'test');
+	EPGLog({
+		OperationCode: 'hello',
+		Detail: 'ddd',
+	});
+
+	</script>
+</body>
+</html>

@@ -34,12 +34,6 @@ function $ID(id) {
     return document.getElementById(id);
 }
 
-function debug(str) {
-    // gcl.append(str);
-    // console.log(str);
-}
-
-
 /* ---------------------------END Channel List --------------------------- */
 
 function ChannelList() {
@@ -61,6 +55,9 @@ function ChannelList() {
 
     // 列表容器
     this.parent = $ID('clist');
+
+    // 频道号显示区元素
+    this.channelNumDiv = null;
 
     // 列表总页数
     this.totalPages = '';
@@ -106,7 +103,16 @@ function ChannelList() {
 
     this.language = 0; // 0 - chi, 1 - eng
 
-    this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown']
+    this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown'];
+
+    // 数字按键计时器
+    this.inputTimer = null;
+
+    // 已经输入的频道数字
+    this.inputNums = [];
+
+    // 频道号计时器
+    this.channelNumTimer = null;
 }
 
 /**
@@ -127,6 +133,12 @@ ChannelList.prototype.eventHandler = function (event) {
 
     // 有按键发生，重置自动隐藏计时器
     that._autoHide();
+
+    // 数字键
+    if (keycode >= 48 && keycode <= 57) {
+        that.inputNum(keycode - 48);
+        return false;
+    }
 
     switch (keycode) {
         case 38:    // up
@@ -177,15 +189,123 @@ ChannelList.prototype.eventHandler = function (event) {
                 // 列表没显示情况下显示列表
                 : that.show());
             return false;
+            break;
+        case 259:
+        case 260:
+            window.location.href = './entry.html';
+            return false;
         break;
         default: return true; break;
     }
 };
 
-// 数字键切台
-ChannelList.prototype.jump = function (index) {
-    
+
+ChannelList.prototype.inputNum = function (num) {
+   
+    var _this = this;
+
+    if (typeof(num) !== 'number' || (num < 0 || num > 9)) {
+        return;
+    }
+
+    // 缓存输入的数字
+    this.inputNums.push(num);
+
+    var nums = this.inputNums;
+
+    // 频道号数字
+    var channelNum = parseInt(nums.join(''), 10);
+
+    this.showChannelNums(nums.join(''));
+    debug('inputNum: ' + channelNum);
+
+    // if (!this.inputTimer) {
+        clearTimeout(_this.inputTimer);
+        this.inputTimer = setTimeout(function () {
+            _this.jump(channelNum);
+        }, 2000);
+    // }
+
+    if (this.inputNums.length >= 3) {
+        clearTimeout(this.inputTimer);
+        this.jump(channelNum);
+        return;
+    }
 };
+
+// 显示频道号
+ChannelList.prototype.showChannelNums = function (nums) {
+
+    for (;;) {
+        if (nums.length < 3) {
+            nums = '0' + nums;
+        } else {
+            break;
+        }
+    }
+
+    debug('CNUM:' + nums);
+
+    clearTimeout(this.channelNumTimer);
+    this.channelNumDiv.innerHTML = nums; 
+
+    this.hideChannelNums();
+};
+
+// 隐藏频道号
+ChannelList.prototype.hideChannelNums = function () {
+    var _this = this;
+    clearTimeout(this.channelNumTimer);
+    this.channelNumTimer = setTimeout(function () {
+        _this.channelNumDiv.innerHTML = '';
+    }, 1500);   
+};
+
+ChannelList.prototype.jump = function (num) {
+    // 跳转后清空频道数字
+    this.inputNums = [];
+    debug('jump:' + num);
+
+    // 频道号不存在
+    if (num <= 0 || num > 999) {
+        // this.hideChannelNums();
+        debug('channel out');
+        return;
+    }
+
+    var channelObj = this.getChannelByUserChannelID(num);
+    debug('channel:' + JSON.stringify(channelObj));
+
+    if (!channelObj.channel || channelObj.index === -1) {
+        // this.hideChannelNums();
+        debug('channel not exist');
+        return;
+    }
+
+    this.updateIndex(channelObj);
+
+    this.play();
+};
+
+// 跳台时更新当前索引
+ChannelList.prototype.updateIndex = function (channelObj) {
+
+    var channel = channelObj.channel;
+    var index = channelObj.index;
+    var dataIndex = index < this.rows ? 0 : index;
+
+    this.dataIndex = parseInt(dataIndex / this.rows, 10) * this.rows;
+    this.currRow = index % this.rows;
+
+    this.refreshData();
+
+    // 刷新行焦点
+    this.refreshFoucsBgColor();
+
+    // this.hideChannelNums();
+};
+
+
 // 隐藏列表
 ChannelList.prototype.hide = function () {
     this.parent.style.display = 'none';
@@ -361,6 +481,28 @@ ChannelList.prototype._getCurrChannelIndex = function () {
     return (this.dataIndex + this.currRow); 
 };
 
+// 根据 UserChannelID 获取频道对象
+ChannelList.prototype.getChannelByUserChannelID = function (userChannelID) {
+    
+    var channels = this.channels;
+    var i = 0, len = channels.length;
+    var index = -1;
+    var channel = null;
+
+    for (; i < len; i++) {
+        if (parseInt(userChannelID, 10) == parseInt(channels[i].UserChannelID, 10)) {
+            index = i;
+            channel = channels[i];
+            break;
+        }
+    }
+
+    return {
+        channel: channel,
+        index: index
+    };
+};
+
 // 通过索引获取当前频道
 ChannelList.prototype._getCurrChannelByIndex = function (index) {
 
@@ -507,10 +649,8 @@ ChannelList.prototype.init = function (callback) {
         var channels = JSON.parse(sessionStorage.getItem('AllChannels'));
         var first = JSON.parse(sessionStorage.getItem('FirstChannel'));
 
-        console.log(JSON.stringify(first));
-
         debug('first: ' + JSON.stringify(first));
-        debug('init chl count: ' + Authentication.CUGetConfig('ChannelCount'));
+        debug('init channel count: ' + Authentication.CUGetConfig('ChannelCount'));
 
         // 先去 session 里的，如果有，就不需要再请求
         if (first && channels && channels.length > 0) {
@@ -673,6 +813,15 @@ ChannelList.prototype._renderRows = function () {
             + '</div>';
     }
 }
+// 频道号显示区
+ChannelList.prototype._generateChannelNumDiv = function () {
+
+    var nums = document.createElement('span');
+    nums.className = 'channel-nums';
+    document.body.appendChild(nums);
+
+    this.channelNumDiv = nums;
+};
 
 // 只会被调用一次，生成列表
 ChannelList.prototype._generateList = function (styles) {
@@ -707,6 +856,8 @@ ChannelList.prototype._generateList = function (styles) {
     parent.innerHTML = contents;
 
     if ( contents ) { that.isGenerated = true; }
+
+    this._generateChannelNumDiv();
 
     return contents;
 }
@@ -786,7 +937,8 @@ MediaPlayController.prototype.virtualEventHandler = function () {
 
     var type = eventJson.type;
 
-    this.error('virtualEventHandler code type: ' + type);
+    // this.error('virtualEventHandler code type: ' + type);
+    debug(type);
     switch (type) {
         case 'EVENT_MEDIA_BEGINNING':   // 视频开始播放
             break;
@@ -890,6 +1042,7 @@ MediaPlayController.prototype.play = function (playUrl) {
     // this.mp.joinChannel(playUrl);
 
     if (isChannelNo) {
+        this.showChannelNums(playUrl);
         this.mp.joinChannel(playUrl);
     } else {
         // 设置播放地址
@@ -930,8 +1083,6 @@ window.onload = function () {
         // 初始化完成之后执行
 
         var channels = clist.channels;
-
-        console.log(channels);
 
         var url = channels[0].UserChannelID;
         // var url = channels[0].ChannelURL;
@@ -1022,5 +1173,30 @@ function fadeFn(el, inout, refV, opacity) {
     };
 };
 
+function debug(obj) {
+    return;
+    var debugDiv = document.getElementById('debug');
+
+    if (!debugDiv) {
+
+       var debugDiv = document.createElement('div');
+       debugDiv.className = 'debug';
+       debugDiv.id = 'debug';
+
+       document.body.appendChild(debugDiv); 
+    }
+
+    var str = '';
+
+    if (typeof(obj) === 'object') {
+        str = JSON.stringify(obj);
+    } else {
+        str = '' + obj;
+    }
+
+    debugDiv.innerHTML += '[' + str + ']';
+}
+
+debug('START');
 
 

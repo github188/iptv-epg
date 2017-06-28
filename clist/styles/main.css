@@ -117,5 +117,29 @@ body {
     background-color: #856B52;
 }
 
+.channel-nums {
+    display: block;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    color: blue;
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    background: transparent;
+}
+
+.debug {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    width: 30%;
+    height: 100%;
+    background-color: white;
+    color: black;
+    z-index: 999999;
+    overflow: scroll;
+}
+
 
 /* ---END channel list --- */

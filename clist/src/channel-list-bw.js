@@ -63,6 +63,9 @@ function ChannelList() {
     // 列表容器
     this.parent = $ID('clist');
 
+    // 频道号显示区元素
+    this.channelNumDiv = null;
+
     // 列表总页数
     this.totalPages = '';
 
@@ -101,7 +104,16 @@ function ChannelList() {
 
     this.language = 0; // 0 - chi, 1 - eng
 
-    this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown']
+    this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown'];
+
+    // 数字按键计时器
+    this.inputTimer = null;
+
+    // 频道号计时器
+    this.channelNumTimer = null;
+
+    // 已经输入的频道数字
+    this.inputNums = [];
 }
 
 /**
@@ -122,6 +134,12 @@ ChannelList.prototype.eventHandler = function (event) {
 
     // 有按键发生，重置自动隐藏计时器
     that._autoHide();
+
+    // 数字键
+    if (keycode >= 48 && keycode <= 57) {
+        that.inputNum(keycode - 48);
+        return false;
+    }
 
     switch (keycode) {
         case 38:    // up
@@ -157,6 +175,101 @@ ChannelList.prototype.eventHandler = function (event) {
         default: return false; break;
     }
 };
+
+ChannelList.prototype.inputNum = function (num) {
+   
+    var _this = this;
+
+    if (typeof(num) !== 'number' || (num < 0 || num > 9)) {
+        return;
+    }
+
+    // 缓存输入的数字
+    this.inputNums.push(num);
+
+    var nums = this.inputNums;
+
+    // 频道号数字
+    var channelNum = parseInt(nums.join(''), 10);
+
+    this.showChannelNums(nums.join(''));
+    console.log('channelNum: ' + channelNum);
+
+    // if (!this.inputTimer) {
+        clearTimeout(_this.inputTimer);
+        this.inputTimer = setTimeout(function () {
+            _this.jump(channelNum);
+        }, 2000);
+    // }
+
+    if (this.inputNums.length >= 3) {
+        clearTimeout(this.inputTimer);
+        this.jump(channelNum);
+        return;
+    }
+};
+
+// 显示频道号
+ChannelList.prototype.showChannelNums = function (nums) {
+    clearTimeout(this.channelNumTimer);
+    this.channelNumDiv.innerHTML = nums; 
+};
+
+// 隐藏频道号
+ChannelList.prototype.hideChannelNums = function () {
+    var _this = this;
+    clearTimeout(this.channelNumTimer);
+    this.channelNumTimer = setTimeout(function () {
+        _this.channelNumDiv.innerHTML = '';
+    }, 300);   
+};
+
+ChannelList.prototype.jump = function (num) {
+    // 跳转后清空频道数字
+    this.inputNums = [];
+    console.log('jump to channel: ' + num);
+
+    // 频道号不存在
+    if (num <= 0 || num > 999) {
+        this.hideChannelNums();
+        console.log('channel num out of bound.');
+        return;
+    }
+
+    console.log('num: ' + num);
+
+    var channelObj = this.getChannelByUserChannelID(num);
+    console.log('-- channel obj: ' + JSON.stringify(channelObj));
+
+    if (!channelObj.channel || channelObj.index === -1) {
+        this.hideChannelNums();
+        console.log('channel num is not exist');
+        return;
+    }
+
+    this.updateIndex(channelObj);
+};
+
+// 跳台时更新当前索引
+ChannelList.prototype.updateIndex = function (channelObj) {
+
+    var channel = channelObj.channel;
+    var index = channelObj.index;
+    var dataIndex = index < this.rows ? 0 : index;
+
+    console.log("dataIndex: " + dataIndex + ', index: ' + index);
+
+    this.dataIndex = parseInt(dataIndex / this.rows, 10) * this.rows;
+    this.currRow = index % this.rows;
+
+    this.refreshData();
+
+    // 刷新行焦点
+    this.refreshFoucsBgColor();
+
+    this.hideChannelNums();
+};
+
 
 // 显示列表
 ChannelList.prototype.show = function () {
@@ -309,6 +422,30 @@ ChannelList.prototype.play = function () {
      that.mpc.play(that.currPlayUrl);
 
     debug('----------------- playing id: ' +  currChannelUserID );
+};
+
+// 根据 UserChannelID 获取频道对象
+ChannelList.prototype.getChannelByUserChannelID = function (userChannelID) {
+    
+    var channels = this.channels;
+    var i = 0, len = channels.length;
+    var index = -1;
+    var channel = null;
+
+    console.log('length: ' + len)
+    for (; i < len; i++) {
+        if (parseInt(userChannelID, 10) == parseInt(channels[i].ChannelNumber, 10)) {
+            console.log(channels[i]);
+            index = i;
+            channel = channels[i];
+            break;
+        }
+    }
+
+    return {
+        channel: channel,
+        index: index
+    };
 };
 
 // 根据数据索引(this.dataIndex) 和 当前行索引(this.currRow) 拿到频道索引
@@ -629,7 +766,17 @@ ChannelList.prototype._renderRows = function () {
             + '<span class="channel-name">' + channelInfos[i].ChannelName + '</span>'
             + '</div>';
     }
-}
+};
+
+// 频道号显示区
+ChannelList.prototype._generateChannelNumDiv = function () {
+
+    var nums = document.createElement('span');
+    nums.className = 'channel-nums';
+    document.body.appendChild(nums);
+
+    this.channelNumDiv = nums;
+};
 
 // 只会被调用一次，生成列表
 ChannelList.prototype._generateList = function (styles) {
@@ -664,6 +811,8 @@ ChannelList.prototype._generateList = function (styles) {
     parent.innerHTML = contents;
 
     if ( contents ) { that.isGenerated = true; }
+
+    this._generateChannelNumDiv();
 
     return contents;
 }
@@ -910,7 +1059,6 @@ function fadeFn(el, inout, refV, opacity) {
         var step = stepV || 1;
         var condition = inout === 'in' ? value >= endV : value <= startV;
         var args = arguments;
-        console.log(condition)
         if (condition) {
             el.style.opacity = value / 100;
             if (inout === 'out') {
@@ -923,8 +1071,6 @@ function fadeFn(el, inout, refV, opacity) {
         value = inout === 'in' ? value + step : value - step;
 
         el.style.opacity = value / 100;
-
-            console.log(el.style.opacity);
 
         clearTimeout(timer);
         timer = setTimeout(function () {

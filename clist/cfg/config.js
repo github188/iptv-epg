@@ -4,7 +4,7 @@
     2. 42.236.123.10    河南郑州
 
 */
-var GCL_LOCALE_DOMAIN = '10.253.255.4';
+var GCL_LOCALE_DOMAIN = '42.236.123.10';
 
 // domian -> window.document.location.href 取 ip + /clist/data/channel.json
 var GCL_CHANNEL_DATA_DOMIAN = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/data/channel.json';
@@ -20,7 +20,6 @@ var GCL_TEST_CHAN_NO_DFT = '1';
 
 // 测试链接
 var GCL_TEST_LINKS = [
-/*
     {   // 认证入口
         link: 'http://10.253.255.4/iptv/portal.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
@@ -34,11 +33,11 @@ var GCL_TEST_LINKS = [
         icon: '<i class="fa fa-bed" aria-hidden="true"></i>',
         text: '酒店入口 - 测试 1'
     }, {    // 直播页面
-        link: 'http://10.253.255.4/iptv/clist/index2.html',     // 113.136.46.37
+        link: 'http://42.236.123.10/iptv/clist/index2.html',     // 113.136.46.37
         icon: '<i class="fa fa-youtube-play" aria-hidden="true"></i>',
         text: '直播页面'
     }, {    // 无MP直播页面
-        link: 'http://10.253.255.4/iptv/clist/index-bw.html',
+        link: 'http://42.236.123.10/iptv/clist/index-bw.html',
         icon: '<i class="fa fa-television" aria-hidden="true"></i>',
         text: '无MP直播页面'
     }, {
@@ -79,14 +78,7 @@ var GCL_TEST_LINKS = [
         link: 'http://10.253.255.4/iptv/clist/play.html',
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: '测试播放'
-    }
-*/
-
-    {   // 认证入口
-        link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/portal.html', 
-        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
-        text: '云南EPG'    
-    }, {   // 播放页面
+    }, {   // 云南播放页面
         link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/clist/play.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: 'play.html'    
