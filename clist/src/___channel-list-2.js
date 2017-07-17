@@ -120,16 +120,15 @@ function ChannelList() {
 
     // 当前音量
     this.currVolume = 0;
-    this.volStep = 5;
 
     // 音量条显示隐藏计时器
     this.volumeTimer = null;
 
     this.volumeObj = {
         wrapper: null,
-        bar: null,
-        line: null,
-        value: null
+        block: null,
+        curr: null,
+        container: null
     };
 }
 
@@ -206,10 +205,6 @@ ChannelList.prototype.eventHandler = function (event) {
                 if (this.isFate && keycode === 8) {
                     window.location.href = './entry.html';
                     return false;
-                }
-                
-                if (this.mpc) {
-                    this.mpc.stop();
                 }
 
                 var mainUrl = sessionStorage.getItem('Main2ChannelURL');
@@ -902,64 +897,53 @@ ChannelList.prototype._cache = function () {
 }
 
 /* =========================== START 音量条 =========================== */
+
 // 音量条
 ChannelList.prototype._generateVolumeBar = function () {
 
-    var wrapper = document.createElement('div');
-    wrapper.className = "vol-wrapper";
-    document.body.appendChild(wrapper);
+    var volContainer = document.createElement('div');
+    volContainer.className = "vol-container";
+    document.body.appendChild(volContainer);
 
     this.currVolume = this.volume() || 0; 
 
-    // debug('curr volume:' + this.currVolume + ', mpc: ' + this.mpc + ', mp: ' + this.mpc.mp);
+    debug('curr volume:' + this.currVolume + ', mpc: ' + this.mpc + ', mp: ' + this.mpc.mp);
 
-    wrapper.innerHTML = ''
-        + '<div class="vol-bar">'
-            + '<div class="vol-line"></div>'
-            + '<div class="vol-ball"></div>'
-        + '</div>'
-        + '<div class="vol-value"></div>';
+    volContainer.innerHTML = ''
+        + '<div class="vol-wrapper">'
+        + '<div class="vol-zero">0</div>'
+        + '<div class="vol-bar"></div>'
+        + '<div class="vol-block"><span class="vol-curr"></span></div>'
+        + '<div class="vol-hundred">100</div>'
+        + '</div>';
 
-    this.volumeObj.wrapper = wrapper;
-    this.volumeObj.bar = document.querySelector('.vol-bar');
-    this.volumeObj.line = document.querySelector('.vol-line');
-    this.volumeObj.value = document.querySelector('.vol-value')
 
-    this.changeCurrVolume();
-};
+    this.volumeObj.wrapper = document.querySelector('.vol-wrapper');
+    this.volumeObj.block = document.querySelector('.vol-block');
+    this.volumeObj.curr = document.querySelector('.vol-curr');
+    this.volumeObj.container = document.querySelector('.vol-container');
 
-ChannelList.prototype.changeCurrVolume = function () {
-    
-    var vbar = this.volumeObj.bar || document.querySelector('.vol-bar');
-    var vline = this.volumeObj.line || document.querySelector('.vol-line');
-    var vvalue = this.volumeObj.value || document.querySelector('.vol-value');
-    var vbarW = vbar.offsetWidth;
-    var w = this.currVolume / 100 * vbarW;
-    var stepW = this.volStep / 100 * vbarW;
-    var deltaW = 0;
+    var block = this.volumeObj.block;
+    var curr = this.volumeObj.curr;
+    var wrapper = this.volumeObj.wrapper;
 
-    if (w < stepW) {
-        w = 0;
-    } else if (vbarW - w < stepW) {
-        w = vbarW
-    }
-    debug('w:' + w);
-    vvalue.innerHTML = this.currVolume;
-    vline.style.width = w + 'px';   
-
+    block.style.left = wrapper.clientWidth * this.currVolume / 100 + 'px';
+    curr.innerHTML = this.currVolume;
 };
 
 ChannelList.prototype.showVolumeBar = function () {
 
-    var wrapper = this.volumeObj.wrapper || document.querySelector('.vol-wrapper');
+    return;
 
-    if (wrapper.style.display !== 'block') {
-        wrapper.style.display = 'block';
+    var container = this.volumeObj.container || document.querySelector('.vol-container');
+
+    if (container.style.display !== 'block') {
+        container.style.display = 'block';
     }
 
     clearTimeout(this.volumeTimer);
     this.volumeTimer = setTimeout(function () {
-        wrapper.style.display = 'none';
+        container.style.display = 'none';
     }, 5000);
 
 }
@@ -991,13 +975,28 @@ ChannelList.prototype.volume = function () {
 
     this.mpc.mp.setVolume(vol);
     this.currVolume = vol;
-    this.changeVolBlock(this.currVolume);
+    this.changeVolBlock(currVolume);
 };
 
 // 音量块
 ChannelList.prototype.changeVolBlock = function (vol) {
-    this.currVolume = vol;
-    this.changeCurrVolume();
+    return;
+    var wrapper = this.volumeObj.wrapper || document.querySelector('.vol-wrapper');
+    var block = this.volumeObj.block || document.querySelector('.vol-block');
+    var curr = this.volumeObj.curr || document.querySelector('.vol-curr');
+
+    var blockCW = block.clientWidth;
+    var wrapperCW = wrapper.clientWidth;
+    var left = wrapperCW * vol / 100;
+
+    debug('left: ' + left);
+    if (wrapperCW - left - blockCW < blockCW) {
+        left = wrapperCW - blockCW;
+    }
+
+    block.style.left = left + 'px';
+
+    curr.innerHTML = this.currVolume;
 };
 
 // 静音设置
@@ -1022,7 +1021,6 @@ function MediaPlayController() {
     this.channelNo = GCL_TEST_CHAN_NO_DFT;
     this.mp = null;
     this.replayTimer = null;
-    this.isChannel = false;
 }
 
 MediaPlayController.prototype.setChannelID = function (channelUserId) {
@@ -1120,7 +1118,7 @@ MediaPlayController.prototype.setMediaStr = function (playUrl) {
 // 获取或设值播放地址
 MediaPlayController.prototype.initMediaPlay = function () {
 
-    // debug('initMediaPlay:' + MediaPlayer);
+    debug('initMediaPlay:' + MediaPlayer);
     // this.setMediaStr(this.playUrl);
     this.mp = new MediaPlayer(); //新建一个mediaplayer对象
     var instanceId = this.mp.getNativePlayerInstanceID(); //读取本地的媒体播放实例的标识
@@ -1159,15 +1157,9 @@ MediaPlayController.prototype.displayMode = function () {
 }
 
 MediaPlayController.prototype.stop = function () {
-    if (this.isChannel) {
-        this.mp.leaveChannel();
-    } else {
-        this.mp.stop();
-        // this.mp.close();
-    }
-    if (this.mp) {
-        this.mp.releaseMediaPlayer(this.mp.getNativePlayerInstanceID());
-    }
+    // this.mp.stop(1);
+    // this.mp.close();
+    this.mp.releaseMediaPlayer(this.mp.getNativePlayerInstanceID());
     return this;
 }
 
@@ -1177,7 +1169,7 @@ MediaPlayController.prototype.play = function (playUrl) {
 
     if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
 
-    this.isChannel = !isNaN(playUrl);
+    var isChannelNo = !isNaN(playUrl);
 
     // this.mp.stop(1);
 
@@ -1187,11 +1179,7 @@ MediaPlayController.prototype.play = function (playUrl) {
 
     // this.mp.joinChannel(playUrl);
 
-    // test
-    this.isChannel = false;
-    playUrl = 'http://42.236.123.10/iptv/clist/vod/yanguiren.ts';
-
-    if (this.isChannel) {
+    if (isChannelNo) {
         this.showChannelNums(playUrl);
         this.mp.joinChannel(playUrl);
     } else {
@@ -1329,7 +1317,7 @@ function fadeFn(el, inout, refV, opacity) {
 };
 
 function debug(obj) {
-    return;
+    // return;
     var debugDiv = document.getElementById('debug');
 
     if (!debugDiv) {

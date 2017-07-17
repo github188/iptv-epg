@@ -21,11 +21,11 @@ var GCL_TEST_CHAN_NO_DFT = '1';
 // 测试链接
 var GCL_TEST_LINKS = [
     {   // 认证入口
-        link: 'http://10.253.255.4/iptv/portal.html', 
+        link: 'http://42.236.123.10/iptv/clist/testmp/main.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
-        text: '当前：河南EPG'
+        text: '当前：testmp'
     }, {    // 首页
-        link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/index_epg.html', 
+        link: 'http://42.236.123.10/iptv/portal.html', 
         icon: '<i class="fa fa-bed" aria-hidden="true"></i>',
         text: '首页'
     }, {    // 酒店入口 - 测试 1
@@ -82,6 +82,10 @@ var GCL_TEST_LINKS = [
         link: 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/clist/play.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: 'play.html'    
+    }, {   // 测试MP对象
+        link: 'http://42.236.123.10/iptv/clist/testmp/main.html', 
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: 'testmp'    
     }
 ];
 

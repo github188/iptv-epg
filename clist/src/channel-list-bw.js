@@ -114,6 +114,20 @@ function ChannelList() {
 
     // 已经输入的频道数字
     this.inputNums = [];
+
+    // 当前音量
+    this.currVolume = 0;
+    this.volStep = 5;
+
+    // 音量条显示隐藏计时器
+    this.volumeTimer = null;
+
+    this.volumeObj = {
+        wrapper: null,
+        bar: null,
+        line: null,
+        value: null
+    };
 }
 
 /**
@@ -142,12 +156,15 @@ ChannelList.prototype.eventHandler = function (event) {
     }
 
     switch (keycode) {
-        case 38:    // up
-            that.move(1); return false;
-        break;
-        case 40:    // down
-            that.move(-1); return false;
-        break;
+
+        case 38: that.volume(5); return false; break;  // 声音 +
+        case 40: that.volume(-5); return false; break; // 声音 -
+        // case 38:    // up
+        //     that.move(1); return false;
+        // break;
+        // case 40:    // down
+        //     that.move(-1); return false;
+        // break;
         // 模拟翻页
         case 37:    // left
             that.move(-1, true);
@@ -209,12 +226,6 @@ ChannelList.prototype.inputNum = function (num) {
     }
 };
 
-// 显示频道号
-ChannelList.prototype.showChannelNums = function (nums) {
-    clearTimeout(this.channelNumTimer);
-    this.channelNumDiv.innerHTML = nums; 
-};
-
 // 隐藏频道号
 ChannelList.prototype.hideChannelNums = function () {
     var _this = this;
@@ -231,7 +242,7 @@ ChannelList.prototype.jump = function (num) {
 
     // 频道号不存在
     if (num <= 0 || num > 999) {
-        this.hideChannelNums();
+        // this.hideChannelNums();
         console.log('channel num out of bound.');
         return;
     }
@@ -242,7 +253,7 @@ ChannelList.prototype.jump = function (num) {
     console.log('-- channel obj: ' + JSON.stringify(channelObj));
 
     if (!channelObj.channel || channelObj.index === -1) {
-        this.hideChannelNums();
+        // this.hideChannelNums();
         console.log('channel num is not exist');
         return;
     }
@@ -267,9 +278,35 @@ ChannelList.prototype.updateIndex = function (channelObj) {
     // 刷新行焦点
     this.refreshFoucsBgColor();
 
-    this.hideChannelNums();
+    // this.hideChannelNums();
+};
+// 显示频道号
+ChannelList.prototype.showChannelNums = function (nums) {
+
+    for (;;) {
+        if (nums.length < 3) {
+            nums = '0' + nums;
+        } else {
+            break;
+        }
+    }
+
+    debug('CNUM:' + nums);
+
+    clearTimeout(this.channelNumTimer);
+    this.channelNumDiv.innerHTML = nums; 
+
+    // this.hideChannelNums();
 };
 
+// 隐藏频道号
+ChannelList.prototype.hideChannelNums = function () {
+    var _this = this;
+    clearTimeout(this.channelNumTimer);
+    this.channelNumTimer = setTimeout(function () {
+        _this.channelNumDiv.innerHTML = '';
+    }, 1500);   
+};
 
 // 显示列表
 ChannelList.prototype.show = function () {
@@ -434,7 +471,7 @@ ChannelList.prototype.getChannelByUserChannelID = function (userChannelID) {
 
     console.log('length: ' + len)
     for (; i < len; i++) {
-        if (parseInt(userChannelID, 10) == parseInt(channels[i].ChannelNumber, 10)) {
+        if (parseInt(userChannelID, 10) == parseInt(channels[i].UserChannelID, 10)) {
             console.log(channels[i]);
             index = i;
             channel = channels[i];
@@ -814,6 +851,8 @@ ChannelList.prototype._generateList = function (styles) {
 
     this._generateChannelNumDiv();
 
+    this._generateVolumeBar();
+
     return contents;
 }
 
@@ -827,7 +866,103 @@ function debug(str) {
     console.log(str);
 }
 
+// 音量条
+ChannelList.prototype._generateVolumeBar = function () {
 
+    var wrapper = document.createElement('div');
+    wrapper.className = "vol-wrapper";
+    document.body.appendChild(wrapper);
+
+    this.currVolume = this.volume() || 0; 
+
+    // debug('curr volume:' + this.currVolume + ', mpc: ' + this.mpc + ', mp: ' + this.mpc.mp);
+
+    wrapper.innerHTML = ''
+        + '<div class="vol-bar">'
+            + '<div class="vol-line"></div>'
+            + '<div class="vol-ball"></div>'
+        + '</div>'
+        + '<div class="vol-value"></div>';
+
+    this.volumeObj.wrapper = wrapper;
+    this.volumeObj.bar = document.querySelector('.vol-bar');
+    this.volumeObj.line = document.querySelector('.vol-line');
+    this.volumeObj.value = document.querySelector('.vol-value')
+
+    this.changeCurrVolume();
+};
+
+ChannelList.prototype.changeCurrVolume = function () {
+    
+    var vbar = this.volumeObj.bar || document.querySelector('.vol-bar');
+    var vline = this.volumeObj.line || document.querySelector('.vol-line');
+    var vvalue = this.volumeObj.value || document.querySelector('.vol-value');
+    var vbarW = vbar.offsetWidth;
+    var w = this.currVolume / 100 * vbarW;
+    var stepW = this.volStep / 100 * vbarW;
+    var deltaW = 0;
+
+    if (w < stepW) {
+        w = 0;
+    } else if (vbarW - w < stepW) {
+        w = vbarW
+    }
+    debug('w:' + w);
+    vvalue.innerHTML = this.currVolume;
+    vline.style.width = w + 'px';   
+
+};
+
+ChannelList.prototype.showVolumeBar = function () {
+
+    var wrapper = this.volumeObj.wrapper || document.querySelector('.vol-wrapper');
+
+    if (wrapper.style.display !== 'block') {
+        wrapper.style.display = 'block';
+    }
+
+    clearTimeout(this.volumeTimer);
+    this.volumeTimer = setTimeout(function () {
+        wrapper.style.display = 'none';
+    }, 5000);
+
+}
+// 声音键处理
+ChannelList.prototype.volume = function () {
+    var args = arguments;
+    var vol = this.currVolume; // this.mpc.mp.getVolume() || 0;
+
+    if (args.length <= 0) {
+        return vol;
+    } else if (args[0] > 0) { // volume +
+        vol += 5; 
+    } else if (args[0] < 0) { // volume -
+        vol -= 5;
+    }
+
+    this.showVolumeBar();
+
+    // 设置每次加减，按5递增递减
+    if (vol % 10 < 5) {
+        vol = vol - vol % 10;
+    } else if ( vol % 10 > 5 ) {
+        vol = vol - vol % 10 + 5;
+    }
+
+    vol = vol > 100 ? 100
+        : vol < 0 ? 0
+        : vol;
+
+    // this.mpc.mp.setVolume(vol);
+    this.currVolume = vol;
+    this.changeVolBlock(this.currVolume);
+};
+
+// 音量块
+ChannelList.prototype.changeVolBlock = function (vol) {
+    this.currVolume = vol;
+    this.changeCurrVolume();
+};
 /* ---------------------------END Channel List --------------------------- */
 
 

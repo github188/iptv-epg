@@ -6,36 +6,175 @@
     <link rel="stylesheet" href="../styles/font-awesome.min.css">
 </head>
 <style>
-	#a3 {
-		width: 100px;
-		heigh
+	body {
+		width: 1280px;
+		height: 720px;
+	}
+
+	* {
+		margin: 0;
+		padding: 0;
+	}
+
+	.vol-container {
+		position: absolute;
+		bottom: 60px;
+		right: 10%;
+		width: 80%;
+		padding: 10px 40px;
+		background: #D0D0D0;
+	}
+
+	.vol-wrapper {
+		position: relative;
+		height: 30px;
+		width: 100%;
+		background: #E7FFA9;
+	}
+
+	.vol-bar {
+		position: absolute;
+		left: 0px;
+		top: 14px;
+		height: 1px;
+		width: 100%;
+		background-color: black;
+	}
+
+	.vol-block {
+		position: absolute;
+		left: 0px;
+		top: 3px;
+		width: 10px;
+		height: 24px;
+		background-color: white;
+	}
+
+	.vol-zero {
+		position: absolute;
+		left: -20px;
+		height: 30px;
+		line-height: 30px;
+		text-align: center;
+		color: black;
+		font-size: 22px;
+	}
+
+	.vol-hundred {
+		position: absolute;
+		right: -40px;
+		height: 30px;
+		line-height: 30px;
+		text-align: center;
+		color: black;
+		font-size: 22px;
+	}
+
+	.vol-curr {
+		position: absolute;
+		right: -5px;
+		top: -15px;
+		color: blue;
 	}
 </style>
 <body>
-<div id="a3"></div>
-	<!-- <script src="./gcl-debug.js"></script> -->
-	<script>
-	function EPGLog(params = {
-	    OperationCode: '',
-	    Detail: '',
-	    condition: ''
-	}) {
 
-		console.log(params);
-	}
+	<script type="text/javascript">
 
-	EPGLog({
-		OperationCode: 'hello',
-		Detail: 'ddd',
-		condition: sessionStorage.getItem('MathPath') === 'test',
-	});
+		var volContainer = document.createElement('div');
+		volContainer.className = "vol-container";
+		document.body.appendChild(volContainer);
 
-	sessionStorage.setItem('MathPath', 'test');
-	EPGLog({
-		OperationCode: 'hello',
-		Detail: 'ddd',
-	});
+		volContainer.innerHTML = ''
+			+ '<div class="vol-wrapper">'
+			+ '<div class="vol-zero">0</div>'
+			+ '<div class="vol-bar"></div>'
+			+ '<div class="vol-block"><span class="vol-curr"></span></div>'
+			+ '<div class="vol-hundred">100</div>'
+			+ '</div>';
 
+		window.onkeydown = function (e) {
+			e = e ? e : window.event;
+			var keycode = e.which ? e.which : e.keyCode;
+
+			switch (keycode) {
+				case 38:
+					volume(5);
+				break;
+				case 40:
+					volume(-5);
+				break;
+			}
+		}
+
+		var wrapper = document.querySelector('.vol-wrapper');
+		var bar = document.querySelector('.vol-bar');
+		var block = document.querySelector('.vol-block');
+		var curr = document.querySelector('.vol-curr');
+
+
+		var currVolume = 20;
+		var isVolShow = false;
+		block.style.left = wrapper.clientWidth * currVolume / 100 + 'px';
+		curr.innerHTML = currVolume;
+		function volume() {
+
+			showVolumeBar();
+
+			var args = arguments;
+			var vol = currVolume;
+			if (args.length <= 0) {
+			    return vol;
+			} else if (args[0] > 0) { // volume +
+			    vol += 5; 
+			} else if (args[0] < 0) { // volume -
+			    vol -= 5;
+			}
+
+			// 设置每次加减，按5递增递减
+			if (vol % 10 < 5) {
+			    vol = vol - vol % 10;
+			} else if ( vol % 10 > 5 ) {
+			    vol = vol - vol % 10 + 5;
+			}
+
+			vol = vol > 100 ? 100
+			    : vol < 0 ? 0
+			    : vol;
+
+			currVolume = vol;
+
+			changeBlock(currVolume);
+		}
+
+		var volumeTimer = null;
+
+		function showVolumeBar() {
+			
+			if (wrapper.style.display !== 'block') {
+				wrapper.style.display = 'block';
+			}
+
+			clearTimeout(volumeTimer);
+			volumeTimer = setTimeout(function () {
+				// wrapper.style.display = 'none';
+			}, 3000);
+		}
+
+		function changeBlock(vol) {
+
+			var left = wrapper.clientWidth * vol / 100;
+
+			console.log('left: ' + left);
+			if (wrapper.clientWidth - left - block.clientWidth < block.clientWidth) {
+				left = wrapper.clientWidth - block.clientWidth;
+			}
+
+			block.style.left = left + 'px';
+
+			curr.innerHTML = currVolume;
+		}
 	</script>
+
 </body>
 </html>
