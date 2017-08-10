@@ -52,7 +52,7 @@ function ChannelList() {
     this.clistPrefix = 'clist-';
 
     // 是否使用虚拟数据
-    // this.isFate = true;
+    this.isFate = true;
 
     // 当前行索引
     this.currRow = 0;
@@ -498,8 +498,8 @@ ChannelList.prototype.play = function () {
     // 播放切隐藏列表
     that.hide();
 
-    var url = currChannelUserID;
-    // var url = that.currPlayUrl;
+    // var url = currChannelUserID;
+    var url = that.currPlayUrl;
 
     debug('play url or UserChannelID: ' + url);
 
@@ -674,6 +674,7 @@ ChannelList.prototype.init = function (callback) {
         // 假数据
         that.channels = FateChannelDatas;
         that._init();
+        if (callback) { callback(); }
     } else {
 
         var channels = JSON.parse(sessionStorage.getItem('AllChannels'));
@@ -752,6 +753,7 @@ ChannelList.prototype._init = function () {
     // 初始化进入页面播放时的地址
     that.currPlayUrl = that.channels[0].ChannelURL;
 
+    debug('currPlayUrl:' + that.currPlayUrl);
     // 启动自动隐藏计时器
     that._autoHide();
 
@@ -1181,15 +1183,16 @@ MediaPlayController.prototype.play = function (playUrl) {
 
     // this.mp.stop(1);
 
-    debug('is joinChannel: ' + isChannelNo);
+    debug('is joinChannel: ' + this.isChannel);
 
     // this.setDisplayArea(200, 100, 500, 400);
 
     // this.mp.joinChannel(playUrl);
 
-    // test
-    this.isChannel = false;
-    playUrl = 'http://42.236.123.10/iptv/clist/vod/yanguiren.ts';
+    // // test
+    // this.isChannel = false;
+    // // playUrl = 'http://42.236.123.10/iptv/clist/vod/yanguiren.ts';
+    // playUrl = 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/assets/video/back_video_4M_out.mp4';
 
     if (this.isChannel) {
         this.showChannelNums(playUrl);
@@ -1197,6 +1200,7 @@ MediaPlayController.prototype.play = function (playUrl) {
     } else {
         // 设置播放地址
         this.setMediaStr(playUrl);
+        debug('play mp:' + this.mp);
         this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
         this.mp.playFromStart();
     }
@@ -1231,16 +1235,22 @@ window.onload = function () {
     window.mpc = new MediaPlayController();
 
     // 显示列表也需要个播放控制器对象
-    clist.mpc = mpc;
+    clist.mpc = window.mpc;
 
+    debug('onload:' + clist.mpc);
     // 频道列表初始化
     clist.init(function () {
         // 初始化完成之后执行
 
         var channels = clist.channels;
 
-        var url = channels[0].UserChannelID;
-        // var url = channels[0].ChannelURL;
+        debug(channels);
+
+        // var ucid = channels[0].UserChannelID;
+        var url = channels[0].ChannelURL;
+
+        //如果不是组播就使用播放地址去播放
+        // url = url.indexOf('igmp://')>= 0?ucid:url;
 
         debug('init url: ' + url);
         // 如果 session 里的已经播了，就不重复播放

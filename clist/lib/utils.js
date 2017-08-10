@@ -10,52 +10,71 @@ function joinObj(obj) {
     return str.join(',');
 }
 
-/* ----------------------- END 直播频道相关 ----------------------- */
+/* ----------------------- START 直播频道相关 ----------------------- */
 
-/**
- * 淡入淡出动画
- * @param  {DOMElement} 需要执行动画的元素
- * @param  {[type]} inout   取值为 'in'：淡入，'out'：淡出
- * @param  {[type]} refV    参考值，用来递增递减，最后值会赋值给元素的 opacity
- * @param  {[type]} opacity 元素的初始透明度
- * @return {[type]}
- */
-function fadeFn(el, inout, refV, opacity) {
+// 下发频道信息
+function setChannels(channels) {
+    
+    var len = channels.length;
+    Authentication.CUSetConfig('ChannelCount', len);
 
-    var value = refV;
+    console.log('channel count: ' + len);
 
-    if (inout === 'in') {
-        el.style.display = 'block';
+    var obj = null;
+    for (var i = 0; i < len; i++) {
+        obj = joinObj(channels[i]);
+        Authentication.CUSetConfig('Channel', obj);
     }
 
-    el.style.opacity = opacity;
+    console.log('first channel: ' + JSON.stringify(channels[0]));
 
-    return function (start, end, stepV) {
-        var startV = start || 0;
-        var endV = end || 100;
-        var step = stepV || 1;
-        var condition = inout === 'in' ? value >= endV : value <= startV;
-        var args = arguments;
-        console.log(condition)
-        if (condition) {
-            el.style.opacity = value / 100;
-            if (inout === 'out') {
-                el.style.display = 'none';
+    // 将第一个频道保存到session
+    sessionStorage.setItem('FirstChannel', JSON.stringify(channels[0]));
+}
+
+var isRequestStatus = false;
+
+// 请求频道信息
+function configChannels(callback) {
+
+    var xhr;
+
+    if (isRequestStatus) {
+        return;
+    }
+    isRequestStatus = true;
+
+    if ( window.XMLHttpRequest ) {
+        xhr = new XMLHttpRequest();
+    } else {
+        xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+
+    xhr.open('get', GCL_CHANNEL_DATA_DOMIAN, true);
+    xhr.onreadystatechange = function () {
+        that.error('ready: ' + xhr.readyState + ', status: ' + xhr.status);
+        if ( xhr.readyState === 4 && xhr.status === 200 ) {
+
+            var _data = JSON.parse(xhr.responseText);
+            var _msgBody = _data.Message.MessageBody;
+
+            if (_msgBody.ResultCode == 200) {
+
+                var channels = _msgBody.ChannelList.Channel;
+
+                if ( channels && channels.length > 0 ) {
+                    setChannels(channels);
+                    if (callback) { callback(); }
+                } else {
+                    // nil
+                }
             }
-            clearTimeout(timer);
-            return;
+
+            isRequestStatus = false;
         }
-
-        value = inout === 'in' ? value + step : value - step;
-
-        el.style.opacity = value / 100;
-
-            console.log(el.style.opacity);
-
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-            fade(el, inout, startV, endV, step);
-        }, 10); 
     };
-};
 
+    xhr.send(null);
+}
+
+/* ----------------------- END 直播频道相关 ----------------------- */

@@ -2,9 +2,12 @@
 /**
     1. 113.136.46.36    陕西西安
     2. 42.236.123.10    河南郑州
+    3. 58.53.214.129     湖北
 
 */
+var GCL_PLAY_BY_TYPE = 1; // 1: 用地址播放, 2: 用频道号播放
 var GCL_LOCALE_DOMAIN = '42.236.123.10';
+var GCL_LOCALE_DOMAIN = '58.53.214.129';
 
 // domian -> window.document.location.href 取 ip + /clist/data/channel.json
 var GCL_CHANNEL_DATA_DOMIAN = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/data/channel.json';
@@ -24,6 +27,10 @@ var GCL_TEST_LINKS = [
         link: 'http://42.236.123.10/iptv/clist/testmp/main.html', 
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: '当前：testmp'
+    }, {   // 认证入口
+        link: 'http://42.236.123.10/iptv/clist/testmp/as_mp.html', 
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '播放：as-mp'
     }, {    // 首页
         link: 'http://42.236.123.10/iptv/portal.html', 
         icon: '<i class="fa fa-bed" aria-hidden="true"></i>',
@@ -68,6 +75,10 @@ var GCL_TEST_LINKS = [
         link: 'http://10.253.255.4/iptv/portal.html',
         icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
         text: '河南: 10.253.255.4'
+    }, {
+        link: 'http://42.236.123.10/iptv/portal.html',
+        icon: '<i class="fa fa-sign-in" aria-hidden="true"></i>',
+        text: '河南: 42.236.123.10'
     }, {
         link: 'http://202.99.114.71:40001/hnlthotel/homePage.html?'
             + 'userId=4322&carrierId=204&industry=hotel&state=1&categoryid=dc00005223&'

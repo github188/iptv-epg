@@ -933,8 +933,6 @@ ChannelList.prototype._generateVolumeBar = function () {
 
 ChannelList.prototype.showVolumeBar = function () {
 
-    return;
-
     var container = this.volumeObj.container || document.querySelector('.vol-container');
 
     if (container.style.display !== 'block') {
@@ -980,7 +978,7 @@ ChannelList.prototype.volume = function () {
 
 // 音量块
 ChannelList.prototype.changeVolBlock = function (vol) {
-    return;
+
     var wrapper = this.volumeObj.wrapper || document.querySelector('.vol-wrapper');
     var block = this.volumeObj.block || document.querySelector('.vol-block');
     var curr = this.volumeObj.curr || document.querySelector('.vol-curr');
@@ -1317,7 +1315,7 @@ function fadeFn(el, inout, refV, opacity) {
 };
 
 function debug(obj) {
-    // return;
+    return;
     var debugDiv = document.getElementById('debug');
 
     if (!debugDiv) {
