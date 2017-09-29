@@ -1,33 +1,30 @@
 <template>
-    <div>
-        <div class="clist">
-            <div class="top" v-show="isTop">
-                上箭头
-            </div>
-            <ul>
-                <li class="row"
-                    v-for="(item, index) in filterChannels"
-                    :class="{ focus: index === dataIndex % rows }"
-                >
-                    <div class="info">
-                        <span class="no">
-                            {{ dataIndex - Math.floor(dataIndex % rows) + index + 1 }}
-                        </span>
-                        <span class="name">{{ item.ChannelName }}</span>
-                    </div>
-                </li>
-            </ul>
-            <div class="bottom" v-show="isBottom">
-                下箭头
-            </div>
-        </div>
-        <right-list ref="rightList"></right-list>
+  <div>
+    <div class="right-list">
+      <div class="top" v-show="isTop">
+        上箭头
+      </div>
+      <ul>
+        <li class="row"
+            v-for="(item, index) in filterChannels"
+            :class="{ focus: index === dataIndex % rows }"
+        >
+          <div class="info">
+            <span class="no">
+              {{ dataIndex - Math.floor(dataIndex % rows) + index + 1 }}
+            </span>
+            <span class="name">{{ item.ChannelName }}</span>
+          </div>
+        </li>
+      </ul>
+      <div class="bottom" v-show="isBottom">
+        下箭头
+      </div>
     </div>
-
+  </div>
 </template>
 <script>
  import FateChannels from '../channel-datas.js';
- import RightList from './RightList';
  export default {
      data() {
          return {
@@ -39,25 +36,11 @@
              zone: 0
          };
      },
-     components: {
-         RightList
-     },
+     components: {},
 
      methods: {
-         eventHandler(keycode) {
-             switch (keycode) {
-                 case 38: this.move(1); break;
-                 case 40: this.move(-1); break;
-                 case 37: this.horiMove(1); break;
-                 case 39: this.horiMove(-1); break;
-                 default: break;
-             }
-         },
-
-         leftMove(direction) {
-
-             // zone === 0
-             // zone === 1 return;
+         updateIndex(direction) {
+             console.log('update index: ' + direction);
 
              let count = this.channels.length;
 
@@ -75,27 +58,6 @@
              }
 
              (direction > 0 ? this.dataIndex-- : this.dataIndex++);
-         },
-
-         rightMove(direction) {
-             this.$refs.rightList.updateIndex(direction);
-         },
-
-         horiMove(direction) {
-             if (direction === 1) {
-                 this.zone = 0;
-             } else if (direction === -1) {
-                 this.zone = 1;
-             }
-         },
-
-         move(direction) {
-             if (this.zone === 0) {
-                 this.leftMove(direction);
-             } else {
-                 this.rightMove(direction);
-             }
-             return true;
          }
      },
 
@@ -123,15 +85,10 @@
          // init injections & reactivity
          this.channels = FateChannels;
      },
+
      mounted() {
          // create vm.$el, replace 'el' with it
          this.$nextTick(() => {
-             window.onkeydown = (event) => {
-                 let e = event ? event : window.event;
-                 let keycode = e.which ? e.which : e.keyCode;
-                 this.eventHandler(keycode);
-                 return false;
-             };
          });
      },
 
@@ -147,12 +104,11 @@
  }
 </script>
 <style lang="stylus" scoped>
- .clist
-  float: left;
+ .right-list
+  float: left
   display: inline-block
   height: 100%
   width: 235px
-  margin-left: 45px
   background-color: #856B52
   .top, .bottom
     width: 227px
