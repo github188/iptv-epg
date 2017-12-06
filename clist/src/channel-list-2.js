@@ -1145,6 +1145,7 @@ window.onunload = function () {
 }
 
 function debug(str) {
+  if (!isTesting) { return false; }
   var db = document.getElementById('clist-debug')
   if (!db) {
     db = document.createElement('div');
