@@ -1,3 +1,5 @@
+var isTesting = false;
+var isOnPlat = true;
 var channelList = FateChannelDatas;
 var firstChannel = FateChannelDatas[0];
 // 下发频道信息
@@ -151,7 +153,6 @@ ChannelList.prototype.eventHandler = function (event) {
   debug('keycode:' + keycode);
 
   switch (keycode) {
-
   case 259: that.volume(5); return false; break;  // 声音 +
   case 260: that.volume(-5); return false; break; // 声音 -
   case 261: that.mute(); return false; break;     // 静音
@@ -190,7 +191,12 @@ ChannelList.prototype.eventHandler = function (event) {
     break;
   case 8:     // 返回键
     if (that.isShow) { that.hide(); }
-    else {
+    else if (isTesting) {
+      location.reload();
+      return false;
+    } else if (isOnPlat) {
+      return false
+    } else {
       return false;
 
       // 测试时，返回键回到 entry.html
@@ -535,7 +541,6 @@ ChannelList.prototype.refreshFoucsBgColor = function () {
 ChannelList.prototype.init = function (callback) {
   var that = this;
   that.setChannelDataDomain();
-  console.log(channelList)
   // 先去 session 里的，如果有，就不需要再请求
   if (firstChannel && channelList && channelList.length > 0) {
     that.channels = channelList;
