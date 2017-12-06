@@ -377,6 +377,7 @@ ChannelList.prototype.play = function () {
   that.hide();
 
   var url = currChannelUserID;
+  debug('current: ' + JSON.stringify(currChannelInfo))
   that.mpc.play(url);
 };
 
