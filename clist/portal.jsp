@@ -1,10 +1,18 @@
+<%@ page contentType="text/html; charset=GBK" %>
+<%@ page import="java.net.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.util.*" %>
+<%@ page import="com.zte.iptv.epg.account.UserInfo" %>
+<%@ page import="com.zte.iptv.epg.util.EpgConstants" %>
+<%@ page import="com.zte.iptv.epg.util.*" %>
 <%
-String userCode = "0000";
-String userGroup = "123";
-String areaID = "111";
-String serverName = "1.1.1.1" ;
-String serverPort = "80";
-String remoteAddr = "1.1.1.1:80";
+UserInfo userInfo = (UserInfo) session.getAttribute(EpgConstants.USERINFO);
+String userCode = userInfo.getUserId();
+String userGroup = userInfo.getUserSetId();
+String areaID = userInfo.getCitycode();
+String serverName = "" + request.getServerName();
+String serverPort = "" + request.getServerPort();
+String remoteAddr = "" + request.getRemoteAddr();
 %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -32,10 +40,10 @@ String remoteAddr = "1.1.1.1:80";
     }
 
     function getIPTVUrl() {
-      return './index2.html?from=zte';
+      return './clist/index2.html';
     }
 
-    var ips = ['10.253.255.2'];
+    var ips = ['10.253.255.10', '10.253.255.11', '10.253.255.12'];
     var timers = [];
     var isSuccess = false;
     var picName = '/iptv/assets/images/epg_entry_check.png';
