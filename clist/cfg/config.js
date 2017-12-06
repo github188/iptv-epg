@@ -2,12 +2,9 @@
 /**
     1. 113.136.46.36    陕西西安
     2. 42.236.123.10    河南郑州
-    3. 58.53.214.129     湖北
 
 */
-var GCL_PLAY_BY_TYPE = 1; // 1: 用地址播放, 2: 用频道号播放
 var GCL_LOCALE_DOMAIN = '42.236.123.10';
-var GCL_LOCALE_DOMAIN = '58.53.214.129';
 
 // domian -> window.document.location.href 取 ip + /clist/data/channel.json
 var GCL_CHANNEL_DATA_DOMIAN = 'http://' + GCL_LOCALE_DOMAIN + '/iptv/clist/data/channel.json';

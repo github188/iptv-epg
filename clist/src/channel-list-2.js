@@ -1,136 +1,126 @@
-/**
- * 频道列表2，无jquery版本
- * 
- * @authors lizc (ccc_simon@163.com)
- * @date    2017-05-09
- * @version 0.1
- *
- * [USE] 使用方式
- *
- *  1. new： var clist = new ChannelList();
- *  2. init: clist.init();
- *  3. 绑定事件: 请使用函数调用方式
- *      window.onkeydown = function (event) { clist.eventHandler(event); };
- * 
- * [CREATE] - 2017-05-09T17:19:59+08:00
- *
- * 2017-05-10T17:35:58+08:00
- *
- * [ADD] MediaPlayController{Object}
- *
- * 2017/5/15 16:18:50
- *
- * [TEST] 测试：releaseMediaPlayer 能否正常关闭视频 [Res: OK]
- *
- * 2017/6/2 20:10:56
- *
- * [ADD] mpc: virtualEventHandler   处理播放虚拟事件
- *
- * [TEST] 1. 能否正常播放 ts 视频；2. 能否正常收到 `EVENT_MEDIA_*` 类的播放消息
- *
- * Wed Jun 28 18:35:25 2017
- *
- * [ADD] 添加音量条和静音处理逻辑
- *  
- */
+var channelList = FateChannelDatas;
+var firstChannel = FateChannelDatas[0];
+// 下发频道信息
+function setChannels(channels) {
+
+  var channels = channelList
+  var len = channels.length;
+  if (window.Authentication) {
+    window.Authentication.CUSetConfig('ChannelCount', len);
+  }
+
+  var obj = null,
+      channel = null,
+      value = '';
+  for (var i = 0; i < len; i++) {
+    channel = channels[i];
+
+    value = '' + 'ChannelID="' + (i + 1) + '",ChannelName="' + channel.ChannelName + '",UserChannelID="' + channel.ChannelNumber + '",ChannelURL="' + channel.LiveUrl + ',TimeShift="0",TimeShiftLength="10800"' + ',ChannelSDP="' + channel.LiveUrl + '",TimeShiftURL="",ChannelType="1",IsHDChannel="2",PreviewEnable="0"' + ',ChannelPurchased="1",ChannelLocked="0"' + ',ChannelLogURL="' + channel.LogoUrl + '",PositionX="null",PositionY="null",BeginTime="null",Interval="null"' + ',Lasting="null",ActionType="1",FCCEnable="0",ChannelFECPort="0"';
+
+    if (window.Authentication) {
+      window.Authentication.CUSetConfig('Channel', value);
+    }
+    value = '';
+  }
+}
 
 function $ID(id) {
-    return document.getElementById(id);
+  return document.getElementById(id);
 }
 
 /* ---------------------------END Channel List --------------------------- */
 
 function ChannelList() {
 
-    // 列表总行数 
-    this.rows = 10;
+  // 列表总行数
+  this.rows = 10;
 
-    // 列表是否已经生成，避免重复创建列表
-    this.isGenerated = false;
+  // 列表是否已经生成，避免重复创建列表
+  this.isGenerated = false;
 
-    // 列表行的 id 前缀
-    this.clistPrefix = 'clist-';
+  // 列表行的 id 前缀
+  this.clistPrefix = 'clist-';
 
-    // 是否使用虚拟数据
-    this.isFate = true;
+  // 是否使用虚拟数据
+  this.isFate = false;
 
-    // 当前行索引
-    this.currRow = 0;
+  // 当前行索引
+  this.currRow = 0;
 
-    // 列表容器
-    this.parent = $ID('clist');
+  // 列表容器
+  this.parent = $ID('clist');
 
-    // 频道号显示区元素
-    this.channelNumDiv = null;
+  // 频道号显示区元素
+  this.channelNumDiv = null;
 
-    // 列表总页数
-    this.totalPages = '';
+  // 列表总页数
+  this.totalPages = '';
 
-    // 当前列表页
-    this.currPage = 1;
+  // 当前列表页
+  this.currPage = 1;
 
-    // 当前行所在频道在频道数据中的索引
-    this.channelIndex = 0;
+  // 当前行所在频道在频道数据中的索引
+  this.channelIndex = 0;
 
-    // 当前选中的频道号
-    this.channelNo = '1';
+  // 当前选中的频道号
+  this.channelNo = '1';
 
-    // 频道信息
-    this.channels = [];
+  // 频道信息
+  this.channels = [];
 
-    // 数据索引
-    this.dataIndex = 0;
+  // 数据索引
+  this.dataIndex = 0;
 
-    // 隐藏计时器
-    this.autoHideTimer = null;
+  // 隐藏计时器
+  this.autoHideTimer = null;
 
-    // 缓存对象
-    this.cache = {};
+  // 缓存对象
+  this.cache = {};
 
-    // 显示状态
-    this.isShow = true;
+  // 显示状态
+  this.isShow = true;
 
-    // 默认频道号
-    this.DftUserChannelID = '';
+  // 默认频道号
+  this.DftUserChannelID = '';
 
-    // 是否正在请求列表
-    this.isRequestStatus = false;
+  // 是否正在请求列表
+  this.isRequestStatus = false;
 
-    // 频道列表服务器地址
-    this.listServerAddr = GCL_LOCALE_DOMAIN;
+  // 频道列表服务器地址
+  this.listServerAddr = GCL_LOCALE_DOMAIN;
 
-    // 第一个频道
-    this.first = null;
+  // 第一个频道
+  this.first = null;
 
-    // 播放器控制对象
-    this.mpc = null;
+  // 播放器控制对象
+  this.mpc = null;
 
-    this.language = 0; // 0 - chi, 1 - eng
+  this.language = 0; // 0 - chi, 1 - eng
 
-    this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown'];
+  this.tips = ['请按‘上/下页键’翻页', 'PageUp or PageDown'];
 
-    // 数字按键计时器
-    this.inputTimer = null;
+  // 数字按键计时器
+  this.inputTimer = null;
 
-    // 已经输入的频道数字
-    this.inputNums = [];
+  // 已经输入的频道数字
+  this.inputNums = [];
 
-    // 频道号计时器
-    this.channelNumTimer = null;
+  // 频道号计时器
+  this.channelNumTimer = null;
 
-    // 当前音量
-    this.currVolume = 0;
-    this.volStep = 5;
+  // 当前音量
+  this.currVolume = 0;
+  this.volStep = 5;
 
-    // 音量条显示隐藏计时器
-    this.volumeTimer = null;
+  // 音量条显示隐藏计时器
+  this.volumeTimer = null;
 
-    this.volumeObj = {
-        wrapper: null,
-        bar: null,
-        line: null,
-        value: null
-    };
+  this.volumeObj = {
+    wrapper: null,
+    bar: null,
+    line: null,
+    value: null
+  };
 }
 
 /**
@@ -141,404 +131,282 @@ function ChannelList() {
 ChannelList.prototype.eventHandler = function (event) {
 
 
-    var keycode = event.which || event.keycode,
-        that = this;
+  var keycode = event.which || event.keycode,
+      that = this;
 
-    // var filterKeys = [38, 40];
+  // var filterKeys = [38, 40];
 
-    // 列表没显示情况下不响应上下键
-    // if ( filterKeys.indexOf(keycode) > -1 && !that.isShow ) { return false; }
+  // 列表没显示情况下不响应上下键
+  // if ( filterKeys.indexOf(keycode) > -1 && !that.isShow ) { return false; }
 
-    // 有按键发生，重置自动隐藏计时器
-    that._autoHide();
+  // 有按键发生，重置自动隐藏计时器
+  that._autoHide();
 
-    // 数字键
-    if (keycode >= 48 && keycode <= 57) {
-        that.inputNum(keycode - 48);
+  // 数字键
+  if (keycode >= 48 && keycode <= 57) {
+    that.inputNum(keycode - 48);
+    return false;
+  }
+
+  debug('keycode:' + keycode);
+
+  switch (keycode) {
+
+  case 259: that.volume(5); return false; break;  // 声音 +
+  case 260: that.volume(-5); return false; break; // 声音 -
+  case 261: that.mute(); return false; break;     // 静音
+  case 258: that.move(1); that.play(); return false; break;   // 频道 +
+  case 257: that.move(-1); that.play(); return false; break;  // 频道 -
+  case 38:    // up
+    that.move(1);
+    if (!that.isShow) { that.play(); }
+    return false;
+    break;
+  case 40:    // down
+    that.move(-1);
+    if (!that.isShow) { that.play(); }
+    return false;
+    break;
+    // 上下页键处理：
+    // 1. 列表显示是翻页
+    // 2. 不显示时切换频道
+  case 33:
+    if (that.isShow) { // 翻页
+      that.move(-1, true);
+    } else { // 切到上一台
+      that.move(1);
+      that.play();
+    }
+    return false;
+    break;
+  case 34:
+    if (that.isShow) {
+      that.move(1, true);
+    } else { // 切到下一个台
+      that.move(-1);
+      that.play();
+    }
+    return false;
+    break;
+  case 8:     // 返回键
+    if (that.isShow) { that.hide(); }
+    else {
+      return false;
+
+      // 测试时，返回键回到 entry.html
+      if (this.isFate && keycode === 8) {
+        window.location.href = './entry.html';
         return false;
+      }
+
+      if (this.mpc) {
+        this.mpc.stop();
+      }
+
+      var mainUrl = sessionStorage.getItem('Main2ChannelURL');
+      window.location.href = mainUrl || '../../epggroup_mains/main_test/main.html';
     }
+    return false;
+    break;
+  case 13:    // 确认键/播放键
 
-    debug('keycode:' + keycode);
+    (that.isShow
+     // 列表显示情况下去播放
+     ? that.play()
 
-    switch (keycode) {
-
-        case 259: that.volume(5); return false; break;  // 声音 +
-        case 260: that.volume(-5); return false; break; // 声音 -
-        case 261: that.mute(); return false; break;     // 静音
-        case 258: that.move(1); that.play(); return false; break;   // 频道 +
-        case 257: that.move(-1); that.play(); return false; break;  // 频道 -
-        case 38:    // up
-            that.move(1); 
-            if (!that.isShow) { that.play(); }
-            return false;
-            break;
-        case 40:    // down
-            that.move(-1); 
-            if (!that.isShow) { that.play(); }
-            return false;
-            break;
-        // 上下页键处理：
-        // 1. 列表显示是翻页
-        // 2. 不显示时切换频道
-        case 33:
-            if (that.isShow) { // 翻页
-                that.move(-1, true); 
-            } else { // 切到上一台
-                that.move(1);
-                that.play();
-            }
-            return false;
-            break;
-        case 34:
-            if (that.isShow) { 
-                that.move(1, true); 
-            } else { // 切到下一个台
-                that.move(-1);
-                that.play();
-            }
-            return false;
-            break;
-        case 8:     // 返回键
-            if (that.isShow) { that.hide(); }
-            else {
-
-                // 测试时，返回键回到 entry.html
-                if (this.isFate && keycode === 8) {
-                    window.location.href = './entry.html';
-                    return false;
-                }
-                
-                if (this.mpc) {
-                    this.mpc.stop();
-                }
-
-                var mainUrl = sessionStorage.getItem('Main2ChannelURL');
-                window.location.href = mainUrl || '../../epggroup_mains/main_test/main.html';
-            }
-            return false;
-            break;
-        case 13:    // 确认键/播放键
-
-            (that.isShow  
-                // 列表显示情况下去播放
-                ? that.play() 
-
-                // 列表没显示情况下显示列表
-                : that.show());
-            return false;
-            break;
-        default: return false; break;
-    }
+     // 列表没显示情况下显示列表
+     : that.show());
+    return false;
+    break;
+  default: return false; break;
+  }
 };
 
 ChannelList.prototype.inputNum = function (num) {
-   
-    var _this = this;
 
-    if (typeof(num) !== 'number' || (num < 0 || num > 9)) {
-        return;
-    }
+  var _this = this;
 
-    // 缓存输入的数字
-    this.inputNums.push(num);
+  if (typeof(num) !== 'number' || (num < 0 || num > 9)) {
+    return;
+  }
 
-    var nums = this.inputNums;
+  // 缓存输入的数字
+  this.inputNums.push(num);
 
-    // 频道号数字
-    var channelNum = parseInt(nums.join(''), 10);
+  var nums = this.inputNums;
 
-    this.showChannelNums(nums.join(''));
-    debug('inputNum: ' + channelNum);
+  // 频道号数字
+  var channelNum = parseInt(nums.join(''), 10);
 
-    // if (!this.inputTimer) {
-        clearTimeout(_this.inputTimer);
-        this.inputTimer = setTimeout(function () {
-            _this.jump(channelNum);
-        }, 2000);
-    // }
+  this.showChannelNums(nums.join(''));
+  debug('inputNum: ' + channelNum);
 
-    if (this.inputNums.length >= 3) {
-        clearTimeout(this.inputTimer);
-        this.jump(channelNum);
-        return;
-    }
+  // if (!this.inputTimer) {
+  clearTimeout(_this.inputTimer);
+  this.inputTimer = setTimeout(function () {
+    _this.jump(channelNum);
+  }, 2000);
+  // }
+
+  if (this.inputNums.length >= 3) {
+    clearTimeout(this.inputTimer);
+    this.jump(channelNum);
+    return;
+  }
 };
 
 // 显示频道号
 ChannelList.prototype.showChannelNums = function (nums) {
 
-    for (;;) {
-        if (nums.length < 3) {
-            nums = '0' + nums;
-        } else {
-            break;
-        }
+  for (;;) {
+    if (nums.length < 3) {
+      nums = '0' + nums;
+    } else {
+      break;
     }
+  }
 
-    debug('CNUM:' + nums);
+  debug('CNUM:' + nums);
 
-    clearTimeout(this.channelNumTimer);
-    this.channelNumDiv.innerHTML = nums; 
-
-    this.hideChannelNums();
+  clearTimeout(this.channelNumTimer);
+  this.channelNumDiv.opacity = 1.0;
+  this.channelNumDiv.innerHTML = nums;
+  this.hideChannelNums();
 };
 
 // 隐藏频道号
 ChannelList.prototype.hideChannelNums = function () {
-    var _this = this;
-    clearTimeout(this.channelNumTimer);
-    this.channelNumTimer = setTimeout(function () {
-        _this.channelNumDiv.innerHTML = '';
-    }, 1500);   
+  var _this = this;
+  clearTimeout(this.channelNumTimer);
+  this.channelNumTimer = setTimeout(function () {
+    _this.channelNumDiv.innerHTML = '';
+    _this.channelNumDiv.opacity = 0.0;
+  }, 3000);
 };
 
 ChannelList.prototype.jump = function (num) {
-    // 跳转后清空频道数字
-    this.inputNums = [];
-    debug('jump:' + num);
+  // 跳转后清空频道数字
+  this.inputNums = [];
+  debug('jump:' + num);
 
-    // 频道号不存在
-    if (num <= 0 || num > 999) {
-        // this.hideChannelNums();
-        debug('channel out');
-        return;
-    }
+  // 频道号不存在
+  if (num <= 0 || num > 999) {
+    // this.hideChannelNums();
+    debug('channel out');
+    return;
+  }
 
-    var channelObj = this.getChannelByUserChannelID(num);
-    debug('channel:' + JSON.stringify(channelObj));
+  var channelObj = this.getChannelByUserChannelID(num);
+  debug('channel:' + JSON.stringify(channelObj));
 
-    if (!channelObj.channel || channelObj.index === -1) {
-        // this.hideChannelNums();
-        debug('channel not exist');
-        return;
-    }
+  if (!channelObj.channel || channelObj.index === -1) {
+    // this.hideChannelNums();
+    debug('channel not exist');
+    return;
+  }
 
-    this.updateIndex(channelObj);
+  this.updateIndex(channelObj);
 };
 
 // 跳台时更新当前索引
 ChannelList.prototype.updateIndex = function (channelObj) {
 
-    var channel = channelObj.channel;
-    var index = channelObj.index;
-    var dataIndex = index < this.rows ? 0 : index;
+  var channel = channelObj.channel;
+  var index = channelObj.index;
+  var dataIndex = index < this.rows ? 0 : index;
 
-    this.dataIndex = parseInt(dataIndex / this.rows, 10) * this.rows;
-    this.currRow = index % this.rows;
+  this.dataIndex = parseInt(dataIndex / this.rows, 10) * this.rows;
+  this.currRow = index % this.rows;
 
-    this.refreshData();
+  this.refreshData();
 
-    // 刷新行焦点
-    this.refreshFoucsBgColor();
+  // 刷新行焦点
+  this.refreshFoucsBgColor();
 
-    this.play();
-    // this.hideChannelNums();
+  this.play();
+  // this.hideChannelNums();
 };
 
 
 // 隐藏列表
 ChannelList.prototype.hide = function () {
-    this.parent.style.display = 'none';
-    this.isShow = false;
-    // this.fadeOut();
+  this.parent.style.display = 'none';
+  this.isShow = false;
 }
 
 // 显示列表
 ChannelList.prototype.show = function () {
-    this.parent.style.display = 'block';
-    this.isShow = true;
-    // this.fadeIn();
+  this.parent.style.display = 'block';
+  this.isShow = true;
 };
-
-// 列表淡入效果
-ChannelList.prototype.fadeIn = function () {
-    return fadeFn(this.parent, 'in', 0, 0);   
-};
-
-// 列表淡出效果
-ChannelList.prototype.fadeOut = function () {
-    return fadeFn(this.parent, 'out', 100, 1);   
-};
-
-
 ChannelList.prototype.setChannelDataDomain = function () {
 
-    this.listServerAddr = GCL_CHANNEL_DATA_DOMIAN;
+  this.listServerAddr = GCL_CHANNEL_DATA_DOMIAN;
 
-    return this;
-}
-
-// 发送post请求频道列表
-ChannelList.prototype.postChannels = function (callback) {
-
-    var that = this;
-    var userID = sessionStorage.getItem("userid") || Authentication.CUGetConfig("UserID");
-    var token = sessionStorage.getItem("Token") || Authentication.CUGetConfig('UserToken');
-    var lang = sessionStorage.getItem("currLangCode") || 'chi';
-    var tmpObj = {
-        "Message": {
-            "MessageType": "GetChannelListReq",
-            "MessageBody": {
-                "UserID": userID,
-                "EpgGroupID": "",
-                "LangCode": lang,
-                "Token": token,
-            }
-        }
-    };
-
-    this.isRequestStatus == true;
-
-    if ( window.XMLHttpRequest ) {
-        xhr = new XMLHttpRequest();
-    } else {
-        xhr = new ActiveXObject('Microsoft.XMLHTTP');
-    }
-
-    var relativePath = sessionStorage.getItem("relativePath") || '';
-
-    xhr.open('post', relativePath + '/epgservice/index.php?MessageType=GetChannelListReq', true);
-    xhr.onreadystatechange = function () {
-        debug('ready: ' + xhr.readyState + ', status: ' + xhr.status);
-        if ( xhr.readyState === 4 && xhr.status === 200 ) {
-
-            var _data = JSON.parse(xhr.responseText);
-            var _msgBody = _data.Message.MessageBody;
-
-            debug('result: ' + _msgBody.ResultCode);
-            if (_msgBody.ResultCode == 200) {
-
-                var channels = _msgBody.ChannelList.Channel;
-
-                if ( channels && channels.length > 0 ) {
-                    that.channels = that.convertChannels(channels);// [].slice.call(channels, 0);
-                    that.first = that.channels[0];
-                    debug('post channel count: ' + that.channels.length);
-                    if (callback) { callback(); }
-                } else {
-                    that.channels = [];
-                    debug('没有频道数据！');
-                }
-            }
-
-            this.isRequestStatus = false;
-        }
-    };
-
-    xhr.send(JSON.stringify(tmpObj));
-};
-
-// 请求频道信息
-ChannelList.prototype.requestChannels = function (callback) {
-
-    var that = this, xhr;
-
-    if (this.isRequestStatus) {
-        return;
-    }
-    this.isRequestStatus = true;
-
-    if ( window.XMLHttpRequest ) {
-        xhr = new XMLHttpRequest();
-    } else {
-        xhr = new ActiveXObject('Microsoft.XMLHTTP');
-    }
-
-    xhr.open('get', that.listServerAddr, true);
-    xhr.onreadystatechange = function () {
-        debug('ready: ' + xhr.readyState + ', status: ' + xhr.status);
-        if ( xhr.readyState === 4 && xhr.status === 200 ) {
-
-            var _data = JSON.parse(xhr.responseText);
-            var _msgBody = _data.Message.MessageBody;
-
-            if (_msgBody.ResultCode == 200) {
-
-                var channels = _msgBody.ChannelList.Channel;
-
-                debug('clist requested channels: ' + channels);
-
-                if ( channels && channels.length > 0 ) {
-                    that.channels = [].slice.call(channels, 0);
-                    if (callback) { callback(); }
-                } else {
-                    that.channels = [];
-                    debug('没有频道数据！');
-                }
-            }
-
-            this.isRequestStatus = false;
-        }
-    };
-
-    xhr.send(null);
+  return this;
 }
 
 // 播放当前直播
 ChannelList.prototype.play = function () {
-    
-    var that = this,
-        currChannelIndex = -1,
-        currChannelUserID = '',
-        playUrl = '';
 
-    // 获取当前频道索引
-    currChannelIndex = that._getCurrChannelIndex();
+  var that = this,
+      currChannelIndex = -1,
+      currChannelUserID = '',
+      playUrl = '';
 
-    // 获取当前频道信息
-    currChannelInfo = that._getCurrChannelByIndex(currChannelIndex);
-  
-    if ( !currChannelInfo ) { return false; }
+  // 获取当前频道索引
+  currChannelIndex = that._getCurrChannelIndex();
 
-    // 拿到用户频道 ID（频道号）
-    currChannelUserID = currChannelInfo.UserChannelID;
+  // 获取当前频道信息
+  currChannelInfo = that._getCurrChannelByIndex(currChannelIndex);
 
-    that.currPlayUrl = currChannelInfo.ChannelURL;
+  if ( !currChannelInfo ) { return false; }
 
-    // 播放切隐藏列表
-    that.hide();
+  // 拿到用户频道 ID（频道号）
+  currChannelUserID = currChannelInfo.UserChannelID;
 
-    // var url = currChannelUserID;
-    var url = that.currPlayUrl;
+  that.currPlayUrl = currChannelInfo.ChannelURL;
 
-    debug('play url or UserChannelID: ' + url);
+  // 播放切隐藏列表
+  that.hide();
 
-    that.mpc.play(url);
+  var url = currChannelUserID;
+  that.mpc.play(url);
 };
 
 // 根据数据索引(this.dataIndex) 和 当前行索引(this.currRow) 拿到频道索引
 ChannelList.prototype._getCurrChannelIndex = function () {
-    return (this.dataIndex + this.currRow); 
+  return (this.dataIndex + this.currRow);
 };
 
 // 根据 UserChannelID 获取频道对象
 ChannelList.prototype.getChannelByUserChannelID = function (userChannelID) {
-    
-    var channels = this.channels;
-    var i = 0, len = channels.length;
-    var index = -1;
-    var channel = null;
 
-    for (; i < len; i++) {
-        if (parseInt(userChannelID, 10) == parseInt(channels[i].UserChannelID, 10)) {
-            index = i;
-            channel = channels[i];
-            break;
-        }
+  var channels = this.channels;
+  var i = 0, len = channels.length;
+  var index = -1;
+  var channel = null;
+
+  for (; i < len; i++) {
+    if (parseInt(userChannelID, 10) == parseInt(channels[i].UserChannelID, 10)) {
+      index = i;
+      channel = channels[i];
+      break;
     }
+  }
 
-    return {
-        channel: channel,
-        index: index
-    };
+  return {
+    channel: channel,
+    index: index
+  };
 };
 
 // 通过索引获取当前频道
 ChannelList.prototype._getCurrChannelByIndex = function (index) {
 
-    if ( index < 0 ) { debug('频道号不存在！'); return null; }
+  if ( index < 0 ) { debug('频道号不存在！'); return null; }
 
-    return this.channels && this.channels[index]; 
+  return this.channels && this.channels[index];
 };
 
 /**
@@ -548,54 +416,54 @@ ChannelList.prototype._getCurrChannelByIndex = function (index) {
  */
 ChannelList.prototype.move = function (direction, isTurnPage) {
 
-    var that = this,
-        count = that.channels.length,
-        // 上下到头是否需要翻页标识
-        needRound = false; 
+  var that = this,
+      count = that.channels.length,
+      // 上下到头是否需要翻页标识
+      needRound = false;
 
-    if ( direction !== 1 && direction !== -1 ) { return false; }
+  if ( direction !== 1 && direction !== -1 ) { return false; }
 
-    // 翻页
-    if (typeof(isTurnPage) === 'boolean' && isTurnPage) {
-        that.turnPage(direction);
-        return;
-    }
+  // 翻页
+  if (typeof(isTurnPage) === 'boolean' && isTurnPage) {
+    that.turnPage(direction);
+    return;
+  }
 
-    // 焦点在第一页第一行，不响应上键
-    if ( direction > 0 && that.currRow <= 0 && that.dataIndex <= 0 ) {
-        return false; // 上到头了
-    } 
+  // 焦点在第一页第一行，不响应上键
+  if ( direction > 0 && that.currRow <= 0 && that.dataIndex <= 0 ) {
+    return false; // 上到头了
+  }
 
-    // 焦点在最后一页最后一行，不响应下键
-    if ( direction < 0 && that.dataIndex + that.currRow + 1 === count ) {
-         return false;
-    }
+  // 焦点在最后一页最后一行，不响应下键
+  if ( direction < 0 && that.dataIndex + that.currRow + 1 === count ) {
+    return false;
+  }
 
-    // 焦点行索引向上递减，向下递增
-    direction > 0 ? that.currRow-- : that.currRow++;
+  // 焦点行索引向上递减，向下递增
+  direction > 0 ? that.currRow-- : that.currRow++;
 
-    if ( direction < 0 && that.currRow >= that.rows ) { // 下到头，向下翻页
-        that.currPage++;
-        that.currRow = 0; 
-        that.dataIndex += that.rows;    // 数据索引加一页行数，及防止越界
-        if ( that.dataIndex >= count ) { that.dataIndex = count - 1; }
-        needRound = true;
-    } else if ( direction > 0 && that.currRow < 0 ) { // 上到头，向上翻页
-        that.currPage--;
-        that.currRow = that.rows - 1;
-        that.dataIndex -= that.rows;    // 数据说因减一页行数，及防止越界
-        if ( that.dataIndex <= 0 ) { that.dataIndex = 0; }
-        needRound = true;
-    }
+  if ( direction < 0 && that.currRow >= that.rows ) { // 下到头，向下翻页
+    that.currPage++;
+    that.currRow = 0;
+    that.dataIndex += that.rows;    // 数据索引加一页行数，及防止越界
+    if ( that.dataIndex >= count ) { that.dataIndex = count - 1; }
+    needRound = true;
+  } else if ( direction > 0 && that.currRow < 0 ) { // 上到头，向上翻页
+    that.currPage--;
+    that.currRow = that.rows - 1;
+    that.dataIndex -= that.rows;    // 数据说因减一页行数，及防止越界
+    if ( that.dataIndex <= 0 ) { that.dataIndex = 0; }
+    needRound = true;
+  }
 
-    // 输出方向，数据索引，和当前行
-    // debug('msg: ' + 'd/' + direction + ', currRow/' + that.currRow + ', dataIndex/' + that.dataIndex);
+  // 输出方向，数据索引，和当前行
+  // debug('msg: ' + 'd/' + direction + ', currRow/' + that.currRow + ', dataIndex/' + that.dataIndex);
 
-    // 翻页刷新数据
-    if ( needRound ) { that.refreshData(); }
+  // 翻页刷新数据
+  if ( needRound ) { that.refreshData(); }
 
-    // 刷新行焦点
-    that.refreshFoucsBgColor();
+  // 刷新行焦点
+  that.refreshFoucsBgColor();
 };
 
 /**
@@ -604,32 +472,32 @@ ChannelList.prototype.move = function (direction, isTurnPage) {
  * @return {[type]}
  */
 ChannelList.prototype.turnPage = function (direction) {
-   
-    if (direction !== 1 && direction !== -1) { return false; }
 
-    var that = this;
-    var count = that.channels.length;
+  if (direction !== 1 && direction !== -1) { return false; }
 
-    if (direction > 0) {
-        if (that.currPage === that.totalPages) { return false; }
-        that.currPage++;
-        that.dataIndex += that.rows;    // 数据索引加一页行数，及防止越界
-        if ( that.dataIndex >= count ) { that.dataIndex = count - 1; }
-    } else if (direction < 0) {
-        if (that.currPage === 1) { return false; }
-        that.currPage--;
-        that.dataIndex -= that.rows;    // 数据索引减一页行数，及防止越界
-        if ( that.dataIndex <= 0 ) { that.dataIndex = 0; }
-    }
+  var that = this;
+  var count = that.channels.length;
 
-    that.currRow = 0;
+  if (direction > 0) {
+    if (that.currPage === that.totalPages) { return false; }
+    that.currPage++;
+    that.dataIndex += that.rows;    // 数据索引加一页行数，及防止越界
+    if ( that.dataIndex >= count ) { that.dataIndex = count - 1; }
+  } else if (direction < 0) {
+    if (that.currPage === 1) { return false; }
+    that.currPage--;
+    that.dataIndex -= that.rows;    // 数据索引减一页行数，及防止越界
+    if ( that.dataIndex <= 0 ) { that.dataIndex = 0; }
+  }
 
-    that.refreshData();
+  that.currRow = 0;
 
-    // 刷新行焦点
-    that.refreshFoucsBgColor();
+  that.refreshData();
 
-    return false; 
+  // 刷新行焦点
+  that.refreshFoucsBgColor();
+
+  return false;
 };
 
 /**
@@ -637,376 +505,354 @@ ChannelList.prototype.turnPage = function (direction) {
  * @return {[type]} [description]
  */
 ChannelList.prototype.refreshFoucsBgColor = function () {
-    
-    var cInfoDivs = this.cache.cis, // $('.channel-info')
-        that = this,
-        tmpV = '';
 
-    var i = 0, len = cInfoDivs.length || 0;
+  var cInfoDivs = this.cache.cis, // $('.channel-info')
+      that = this,
+      tmpV = '';
 
-    for ( ; i < len; i++ ) {
-        if ( cInfoDivs[i].className.indexOf('focus-bg-color') ) {
+  var i = 0, len = cInfoDivs.length || 0;
 
-            tmpV = cInfoDivs[i].className;
+  for ( ; i < len; i++ ) {
+    if ( cInfoDivs[i].className.indexOf('focus-bg-color') ) {
 
-            cInfoDivs[i].className = tmpV
-                    .split('focus-bg-color')
-                    .map(function (value, index) {
-                        return value.replace(/(^\s*)|(\s*$)/g, '');
-                    })
-                    .join(' ');
-        }
+      tmpV = cInfoDivs[i].className;
+
+      cInfoDivs[i].className = tmpV
+        .split('focus-bg-color')
+        .map(function (value, index) {
+          return value.replace(/(^\s*)|(\s*$)/g, '');
+        })
+        .join(' ');
     }
+  }
 
-    tmpV = cInfoDivs[that.currRow].className;
+  tmpV = cInfoDivs[that.currRow].className;
 
-    cInfoDivs[that.currRow].className = tmpV + ' ' + 'focus-bg-color';
+  cInfoDivs[that.currRow].className = tmpV + ' ' + 'focus-bg-color';
 };
 
 // 列表初始化
 ChannelList.prototype.init = function (callback) {
-   
-    var that = this;
-
-    that.setChannelDataDomain();
-
-    if ( that.isFate ) {
-        // 假数据
-        that.channels = FateChannelDatas;
-        that._init();
-        if (callback) { callback(); }
-    } else {
-
-        var channels = JSON.parse(sessionStorage.getItem('AllChannels'));
-        var first = JSON.parse(sessionStorage.getItem('FirstChannel'));
-
-        debug('first: ' + JSON.stringify(first));
-        debug('init channel count: ' + Authentication.CUGetConfig('ChannelCount'));
-
-        // 先去 session 里的，如果有，就不需要再请求
-        if (first && channels && channels.length > 0) {
-            that.channels = channels;
-            that.first = first;
-            that._init();
-            if (callback) { callback(); }
-        } else {
-            // 请求真实数据，成功执行回调初始化工作
-            that.postChannels(function () {
-                that._init();
-                if (callback) { callback(); }
-            });
-        }
-
-    }
+  var that = this;
+  that.setChannelDataDomain();
+  console.log(channelList)
+  // 先去 session 里的，如果有，就不需要再请求
+  if (firstChannel && channelList && channelList.length > 0) {
+    that.channels = channelList;
+    that.first = firstChannel;
+    that._init();
+    if (callback) { callback(); }
+  }
 };
 
 ChannelList.prototype.convertChannels = function () {
-        
-    var that = this;
 
-    var len = channels.length;
-    debug('cuget count: ' + Authentication.CUGetConfig('ChannelCount'));
+  var that = this;
 
-    var obj = null, channel = null, listChannels = [];
-    for (var i = 0; i < len; i++) {
-        channel = channels[i];
+  var len = channels.length;
 
-        listChannels.push({
-            ChannelID: i + 1,
-            ChannelName: channel.ChannelName,
-            UserChannelID: channel.ChannelNumber,
-            ChannelURL: channel.LiveUrl
-        });
-    }
+  var obj = null, channel = null, listChannels = [];
+  for (var i = 0; i < len; i++) {
+    channel = channels[i];
 
-    that.channels = [].slice.call(listChannels, 0);
+    listChannels.push({
+      ChannelID: i + 1,
+      ChannelName: channel.ChannelName,
+      UserChannelID: channel.ChannelNumber,
+      ChannelURL: channel.LiveUrl
+    });
+  }
+
+  that.channels = [].slice.call(listChannels, 0);
 }
 
 // 内部初始化函数
 ChannelList.prototype._init = function () {
-    
-    var that = this;
 
-    if ( !that.channels || that.channels.length <= 0 ) { return false; }
+  var that = this;
 
-    that.totalPages = Math.ceil(that.channels.length / that.rows);
+  if ( !that.channels || that.channels.length <= 0 ) { return false; }
 
-    // 初始化数据(数据索引，当前页)
-    that.dataIndex = 0;
-    that.currPage = 1;
-    that.DftUserChannelID = that.channels[0].ChannelNumber; // UserChannelID
+  that.totalPages = Math.ceil(that.channels.length / that.rows);
 
-    // 生成列表
-    that._generateList(that.parent);
-    that.cache.lis = document.getElementById('clist').getElementsByTagName('li');
+  // 初始化数据(数据索引，当前页)
+  that.dataIndex = 0;
+  that.currPage = 1;
+  that.DftUserChannelID = that.channels[0].ChannelNumber; // UserChannelID
 
-    // 渲染列表行
-    that._renderRows(that.channels);
-    that.cache.cis = document.getElementsByClassName('channel-info');
+  // 生成列表
+  that._generateList(that.parent);
+  that.cache.lis = document.getElementById('clist').getElementsByTagName('li');
 
-    // 显示列表
-    that.show();
+  // 渲染列表行
+  that._renderRows(that.channels);
+  that.cache.cis = document.getElementsByClassName('channel-info');
 
-    // 初始化焦点行
-    that.refreshFoucsBgColor(); 
+  // 显示列表
+  that.show();
 
-    // 初始化进入页面播放时的地址
-    that.currPlayUrl = that.channels[0].ChannelURL;
+  // 初始化焦点行
+  that.refreshFoucsBgColor();
 
-    debug('currPlayUrl:' + that.currPlayUrl);
-    // 启动自动隐藏计时器
-    that._autoHide();
+  // 初始化进入页面播放时的地址
+  that.currPlayUrl = that.channels[0].ChannelURL;
+
+  // 启动自动隐藏计时器
+  that._autoHide();
 
 }
 
 // 6秒后自动隐藏
 ChannelList.prototype._autoHide = function () {
 
-    var that = this;
+  var that = this;
 
-    clearTimeout(that.autoHideTimer);
-    that.autoHideTimer = setTimeout(function () {
-        // $(that.parent).fadeOut(1000);
-        that.parent.style.display = 'none';
-        that.isShow = false;
-    }, 6000);
+  clearTimeout(that.autoHideTimer);
+  that.autoHideTimer = setTimeout(function () {
+    // $(that.parent).fadeOut(1000);
+    that.parent.style.display = 'none';
+    that.isShow = false;
+  }, 6000);
 }
 
 // 刷新列表数据
 ChannelList.prototype.refreshData = function () {
-    
-    var that = this,
-        spans = null,
-        channelInfo = null,
-        dataIndex = -1,
-        count = that.channels.length,
-        lastRows = count % that.rows;
 
-    if ( !that.channels ) { return false; }
+  var that = this,
+      spans = null,
+      channelInfo = null,
+      dataIndex = -1,
+      count = that.channels.length,
+      lastRows = count % that.rows;
 
-    that._clearList();
+  if ( !that.channels ) { return false; }
 
-    var cis = that.cache.cis;
+  that._clearList();
 
-    for ( var index = 0, len = cis.length; index < len; index++ ) {
+  var cis = that.cache.cis;
 
-        dataIndex = that.dataIndex + index;
+  for ( var index = 0, len = cis.length; index < len; index++ ) {
 
-        // 没有数据可刷新了，结束刷新
-        if ( that.dataIndex === count - lastRows
-            && index >= lastRows ) { debug('over');return false; };
+    dataIndex = that.dataIndex + index;
 
-        channelInfo = that.channels[dataIndex];
+    // 没有数据可刷新了，结束刷新
+    if ( that.dataIndex === count - lastRows
+         && index >= lastRows ) { debug('over');return false; };
 
-        spans = cis[index].getElementsByTagName('span');
-        spans[0].innerHTML = dataIndex + 1;
-        spans[1].innerHTML = channelInfo.ChannelName;
-    }
+    channelInfo = that.channels[dataIndex];
+
+    spans = cis[index].getElementsByTagName('span');
+    spans[0].innerHTML = dataIndex + 1;
+    spans[1].innerHTML = channelInfo.ChannelName;
+  }
 };
 
 // 清空列表内容
 ChannelList.prototype._clearList = function () {
-    
-    var spans = null;
-    var cis = this.cache.cis;
 
-    for ( var i = 0, len = cis.length; i < len; i++ ) {
+  var spans = null;
+  var cis = this.cache.cis;
 
-        spans = cis[i].getElementsByTagName('span');
+  for ( var i = 0, len = cis.length; i < len; i++ ) {
 
-        spans[0].innerHTML = '';
-        spans[1].innerHTML = '';
-    }
+    spans = cis[i].getElementsByTagName('span');
+
+    spans[0].innerHTML = '';
+    spans[1].innerHTML = '';
+  }
 }
 
 // 只会被调用一次，初始化时使用
 ChannelList.prototype._renderRows = function () {
-    
-    var that = this,
-        rowContent = '',
-        channelInfos = that.channels,
-        lis = that.cache.lis,
-        count = 0;
 
-    if ( !channelInfos ) { return null; }
+  var that = this,
+      rowContent = '',
+      channelInfos = that.channels,
+      lis = that.cache.lis,
+      count = 0;
 
-    count = channelInfos.length < lis.length
-        ? channelInfos.length
-        : lis.length;
+  if ( !channelInfos ) { return null; }
 
-    for ( var i = 0, len = count; i < len; i++ ) {
+  count = channelInfos.length < lis.length
+    ? channelInfos.length
+    : lis.length;
 
-        lis[i].innerHTML = ''
-            + '<div class="channel-info">'
-            // 序号
-            + '<span class="channel-index">' + (i + 1) + '</span>'
-            // 频道名
-            + '<span class="channel-name">' + channelInfos[i].ChannelName + '</span>'
-            + '</div>';
-    }
+  for ( var i = 0, len = count; i < len; i++ ) {
+
+    lis[i].innerHTML = ''
+      + '<div class="channel-info">'
+    // 序号
+      + '<span class="channel-index">' + (i + 1) + '</span>'
+    // 频道名
+      + '<span class="channel-name">' + channelInfos[i].ChannelName + '</span>'
+      + '</div>';
+  }
 }
 // 频道号显示区
 ChannelList.prototype._generateChannelNumDiv = function () {
 
-    var nums = document.createElement('span');
-    nums.className = 'channel-nums';
-    document.body.appendChild(nums);
+  var nums = document.createElement('span');
+  nums.className = 'channel-nums';
+  document.body.appendChild(nums);
 
-    this.channelNumDiv = nums;
+  this.channelNumDiv = nums;
 };
 
 // 只会被调用一次，生成列表
 ChannelList.prototype._generateList = function (styles) {
-    
-    var that = this, 
-        contents = '',
-        i = 0,
-        len = that.rows || 10,
-        parent = that.parent;
 
-    if ( that.isGenerated ) { debug('dont repeat;');return; }
+  var that = this,
+      contents = '',
+      i = 0,
+      len = that.rows || 10,
+      parent = that.parent;
 
-    contents += '<div id="clist-top">'
-             + '<span id="page-tip">' + this.tips[this.language] + '</span>'
-             + '<i class="fa fa-angle-up fa-2x" aria-hidden="true"></i>'
-             + '</div>';
+  if ( that.isGenerated ) { debug('dont repeat;');return; }
 
-    for ( ; i < len; i++ ) {
-        contents    += '<li id="'
-                    + that.clistPrefix + i + '">'
-                    // 防止数据不够一页时，依旧有索引填充
-                    + (that.channels.length < that.rows ? '' : i)
-                    + '</li>';
-    }
+  contents += '<div id="clist-top">'
+    + '<span id="page-tip">' + this.tips[this.language] + '</span>'
+    + '<i class="fa fa-angle-up fa-2x" aria-hidden="true"></i>'
+    + '</div>';
 
-    contents += '<div id="clist-bottom">'
-             + '<i class="fa fa-angle-down fa-2x" aria-hidden="true"></i>'
-             + '</div>';
+  for ( ; i < len; i++ ) {
+    contents    += '<li id="'
+      + that.clistPrefix + i + '">'
+    // 防止数据不够一页时，依旧有索引填充
+      + (that.channels.length < that.rows ? '' : i)
+      + '</li>';
+  }
 
-    parent = parent || document.body;
+  contents += '<div id="clist-bottom">'
+    + '<i class="fa fa-angle-down fa-2x" aria-hidden="true"></i>'
+    + '</div>';
 
-    parent.innerHTML = contents;
+  parent = parent || document.body;
 
-    if ( contents ) { that.isGenerated = true; }
+  parent.innerHTML = contents;
 
-    // 创建频道显示区
-    this._generateChannelNumDiv();
+  if ( contents ) { that.isGenerated = true; }
 
-    // 创建音量显示区
-    this._generateVolumeBar();
+  // 创建频道显示区
+  this._generateChannelNumDiv();
 
-    return contents;
+  // 创建音量显示区
+  this._generateVolumeBar();
+
+  return contents;
 }
 
 // 缓存数据
 ChannelList.prototype._cache = function () {
-    // unuse 
+  // unuse
 }
 
 /* =========================== START 音量条 =========================== */
 // 音量条
 ChannelList.prototype._generateVolumeBar = function () {
 
-    var wrapper = document.createElement('div');
-    wrapper.className = "vol-wrapper";
-    document.body.appendChild(wrapper);
+  var wrapper = document.createElement('div');
+  wrapper.className = "vol-wrapper";
+  document.body.appendChild(wrapper);
 
-    this.currVolume = this.volume() || 0; 
+  this.currVolume = this.volume() || 0;
 
-    // debug('curr volume:' + this.currVolume + ', mpc: ' + this.mpc + ', mp: ' + this.mpc.mp);
+  // debug('curr volume:' + this.currVolume + ', mpc: ' + this.mpc + ', mp: ' + this.mpc.mp);
 
-    wrapper.innerHTML = ''
-        + '<div class="vol-bar">'
-            + '<div class="vol-line"></div>'
-            + '<div class="vol-ball"></div>'
-        + '</div>'
-        + '<div class="vol-value"></div>';
+  wrapper.innerHTML = ''
+    + '<div class="vol-bar">'
+    + '<div class="vol-line"></div>'
+    + '<div class="vol-ball"></div>'
+    + '</div>'
+    + '<div class="vol-value"></div>';
 
-    this.volumeObj.wrapper = wrapper;
-    this.volumeObj.bar = document.querySelector('.vol-bar');
-    this.volumeObj.line = document.querySelector('.vol-line');
-    this.volumeObj.value = document.querySelector('.vol-value')
+  this.volumeObj.wrapper = wrapper;
+  this.volumeObj.bar = document.querySelector('.vol-bar');
+  this.volumeObj.line = document.querySelector('.vol-line');
+  this.volumeObj.value = document.querySelector('.vol-value')
 
-    this.changeCurrVolume();
+  this.changeCurrVolume();
 };
 
 ChannelList.prototype.changeCurrVolume = function () {
-    
-    var vbar = this.volumeObj.bar || document.querySelector('.vol-bar');
-    var vline = this.volumeObj.line || document.querySelector('.vol-line');
-    var vvalue = this.volumeObj.value || document.querySelector('.vol-value');
-    var vbarW = vbar.offsetWidth;
-    var w = this.currVolume / 100 * vbarW;
-    var stepW = this.volStep / 100 * vbarW;
-    var deltaW = 0;
 
-    if (w < stepW) {
-        w = 0;
-    } else if (vbarW - w < stepW) {
-        w = vbarW
-    }
-    debug('w:' + w);
-    vvalue.innerHTML = this.currVolume;
-    vline.style.width = w + 'px';   
+  var vbar = this.volumeObj.bar || document.querySelector('.vol-bar');
+  var vline = this.volumeObj.line || document.querySelector('.vol-line');
+  var vvalue = this.volumeObj.value || document.querySelector('.vol-value');
+  var vbarW = vbar.offsetWidth;
+  var w = this.currVolume / 100 * vbarW;
+  var stepW = this.volStep / 100 * vbarW;
+  var deltaW = 0;
+
+  if (w < stepW) {
+    w = 0;
+  } else if (vbarW - w < stepW) {
+    w = vbarW
+  }
+  debug('w:' + w);
+  vvalue.innerHTML = this.currVolume;
+  vline.style.width = w + 'px';
 
 };
 
 ChannelList.prototype.showVolumeBar = function () {
 
-    var wrapper = this.volumeObj.wrapper || document.querySelector('.vol-wrapper');
+  var wrapper = this.volumeObj.wrapper || document.querySelector('.vol-wrapper');
 
-    if (wrapper.style.display !== 'block') {
-        wrapper.style.display = 'block';
-    }
+  if (wrapper.style.display !== 'block') {
+    wrapper.style.display = 'block';
+  }
 
-    clearTimeout(this.volumeTimer);
-    this.volumeTimer = setTimeout(function () {
-        wrapper.style.display = 'none';
-    }, 5000);
+  clearTimeout(this.volumeTimer);
+  this.volumeTimer = setTimeout(function () {
+    wrapper.style.display = 'none';
+  }, 5000);
 
 }
 // 声音键处理
 ChannelList.prototype.volume = function () {
-    var args = arguments;
-    var vol = this.mpc.mp.getVolume() || 0;
+  if (!this.mpc || !this.mpc.mp) {
+    return false;
+  }
+  var args = arguments;
+  var vol = this.mpc.mp.getVolume() || 0;
 
-    if (args.length <= 0) {
-        return vol;
-    } else if (args[0] > 0) { // volume +
-        vol += 5; 
-    } else if (args[0] < 0) { // volume -
-        vol -= 5;
-    }
+  if (args.length <= 0) {
+    return vol;
+  } else if (args[0] > 0) { // volume +
+    vol += 5;
+  } else if (args[0] < 0) { // volume -
+    vol -= 5;
+  }
 
-    this.showVolumeBar();
+  this.showVolumeBar();
 
-    // 设置每次加减，按5递增递减
-    if (vol % 10 < 5) {
-        vol = vol - vol % 10;
-    } else if ( vol % 10 > 5 ) {
-        vol = vol - vol % 10 + 5;
-    }
+  // 设置每次加减，按5递增递减
+  if (vol % 10 < 5) {
+    vol = vol - vol % 10;
+  } else if ( vol % 10 > 5 ) {
+    vol = vol - vol % 10 + 5;
+  }
 
-    vol = vol > 100 ? 100
-        : vol < 0 ? 0
-        : vol;
+  vol = vol > 100 ? 100
+    : vol < 0 ? 0
+    : vol;
 
-    this.mpc.mp.setVolume(vol);
-    this.currVolume = vol;
-    this.changeVolBlock(this.currVolume);
+  this.mpc.mp.setVolume(vol);
+  this.currVolume = vol;
+  this.changeVolBlock(this.currVolume);
 };
 
 // 音量块
 ChannelList.prototype.changeVolBlock = function (vol) {
-    this.currVolume = vol;
-    this.changeCurrVolume();
+  this.currVolume = vol;
+  this.changeCurrVolume();
 };
 
 // 静音设置
 ChannelList.prototype.mute = function () {
-    this.mpc.mp.setMuteFlag(
-        this.mpc.mp.getMuteFlag() == 0 ? 1 : 0
-    );
+  this.mpc.mp.setMuteFlag(
+    this.mpc.mp.getMuteFlag() == 0 ? 1 : 0
+  );
 };
 /* =========================== END 音量条 =========================== */
 
@@ -1018,350 +864,290 @@ ChannelList.prototype.mute = function () {
 
 // 播放器对象
 function MediaPlayController() {
-    
-    this.mediaStr = '';
-    this.playUrl = GCL_TEST_VIDEO_DFT;
-    this.channelNo = GCL_TEST_CHAN_NO_DFT;
-    this.mp = null;
-    this.replayTimer = null;
-    this.isChannel = false;
+
+  this.mediaStr = '';
+  this.playUrl = GCL_TEST_VIDEO_DFT;
+  this.channelNo = GCL_TEST_CHAN_NO_DFT;
+  this.mp = null;
+  this.replayTimer = null;
+  this.isChannel = false;
 }
 
 MediaPlayController.prototype.setChannelID = function (channelUserId) {
-    this.channelID = channelUserId;
-    return this;
+  this.channelID = channelUserId;
+  return this;
 }
 
 MediaPlayController.prototype.init = function () {
-    debug('MPC init');
-    this.initMediaPlay();
-    return this;
+  debug('MPC init');
+  this.initMediaPlay();
+  return this;
 };
 
 // 频道列表错误处理
 MediaPlayController.prototype.error = function (msg, code, handler) {
 
-    return;
-    var errorContent = '',
-        width = 350,
-        left = (document.body.clientWidth - width) / 2;
+  return;
+  var errorContent = '',
+      width = 350,
+      left = (document.body.clientWidth - width) / 2;
 
-    errorContent = '<div id="mp-error-tips" style="position:absolute;'
-        + 'left:' + left
-        + 'px;top:40%;'
-        + 'width:' + width 
-        + 'px;background-color:gray;border-radius:2px;'
-        + 'text-align:center;line-height:80px;color:white;font-size:22px;'
-        + '">'
-        + '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>'
-        + '&nbsp;&nbsp;' + msg
-        + '</div>';
+  errorContent = '<div id="mp-error-tips" style="position:absolute;'
+    + 'left:' + left
+    + 'px;top:40%;'
+    + 'width:' + width
+    + 'px;background-color:gray;border-radius:2px;'
+    + 'text-align:center;line-height:80px;color:white;font-size:22px;'
+    + '">'
+    + '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>'
+    + '&nbsp;&nbsp;' + msg
+    + '</div>';
 
-    var div = document.createElement('div');
-    document.body.appendChild(div);
-    div.innerHTML = errorContent;
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  div.innerHTML = errorContent;
 
-    // $('body').append($(errorContent));
+  // $('body').append($(errorContent));
 
-    setTimeout(function () {
-        div.parentNode.removeChild(div);
-    }, 2000);
+  setTimeout(function () {
+    div.parentNode.removeChild(div);
+  }, 2000);
 };
 
 // 虚拟事件处理
 MediaPlayController.prototype.virtualEventHandler = function () {
 
-    var eventJson = Utility.getEvent();
+  var eventJson = Utility.getEvent();
 
-    // 这里可能会报错，因为底下传上来的的 
-    // event json 中的 key 没有带引号，JSON.parse 会解析错误
-    // eventJson = JSON.parse(eventJson);
-    eventJson = eval('(' + eventJson + ')');
+  // 这里可能会报错，因为底下传上来的的
+  // event json 中的 key 没有带引号，JSON.parse 会解析错误
+  // eventJson = JSON.parse(eventJson);
+  eventJson = eval('(' + eventJson + ')');
 
-    var type = eventJson.type;
+  var type = eventJson.type;
 
-    // this.error('virtualEventHandler code type: ' + type);
-    debug(type);
-    switch (type) {
-        case 'EVENT_MEDIA_BEGINNING':   // 视频开始播放
-            break;
-        case 'EVENT_MEDIA_END':     // 视频播放结束
-            this.play(this.playUrl);
-            break;
-        case 'EVENT_MEDIA_ERROR':   // 视频播放错误
-            break;
-        default:return false;break;
-    }
+  // this.error('virtualEventHandler code type: ' + type);
+  debug(type);
+  switch (type) {
+  case 'EVENT_MEDIA_BEGINNING':   // 视频开始播放
+    break;
+  case 'EVENT_MEDIA_END':     // 视频播放结束
+    this.play(this.playUrl);
+    break;
+  case 'EVENT_MEDIA_ERROR':   // 视频播放错误
+    break;
+  default:return false;break;
+  }
 
-    return false;
+  return false;
 };
 
 MediaPlayController.prototype.setMediaStr = function (playUrl) {
-    
-    if ( !playUrl ) { that.error('setMediaStr 频道地址不存在！'); return; }
 
-    this.playUrl = playUrl;
+  if ( !playUrl ) { that.error('setMediaStr 频道地址不存在！'); return; }
 
-    this.mediaStr = '[{mediaUrl:"' + playUrl + '",';
-    this.mediaStr += 'mediaCode: "jsoncode1",';
-    this.mediaStr += 'mediaType:2,';
-    this.mediaStr += 'audioType:1,';
-    this.mediaStr += 'videoType:1,';
-    this.mediaStr += 'streamType:1,';
-    this.mediaStr += 'drmType:1,';
-    this.mediaStr += 'fingerPrint:0,';
-    this.mediaStr += 'copyProtection:1,';
-    this.mediaStr += 'allowTrickmode:1,';
-    this.mediaStr += 'startTime:0,';
-    this.mediaStr += 'endTime:20000,';
-    this.mediaStr += 'entryID:"jsonentry1"}]';
+  this.playUrl = playUrl;
 
-    return this;
+  this.mediaStr = '[{mediaUrl:"' + playUrl + '",';
+  this.mediaStr += 'mediaCode: "jsoncode1",';
+  this.mediaStr += 'mediaType:2,';
+  this.mediaStr += 'audioType:1,';
+  this.mediaStr += 'videoType:1,';
+  this.mediaStr += 'streamType:1,';
+  this.mediaStr += 'drmType:1,';
+  this.mediaStr += 'fingerPrint:0,';
+  this.mediaStr += 'copyProtection:1,';
+  this.mediaStr += 'allowTrickmode:1,';
+  this.mediaStr += 'startTime:0,';
+  this.mediaStr += 'endTime:20000,';
+  this.mediaStr += 'entryID:"jsonentry1"}]';
+
+  return this;
 }
 
 // 获取或设值播放地址
 MediaPlayController.prototype.initMediaPlay = function () {
 
-    // debug('initMediaPlay:' + MediaPlayer);
-    // this.setMediaStr(this.playUrl);
-    this.mp = new MediaPlayer(); //新建一个mediaplayer对象
-    var instanceId = this.mp.getNativePlayerInstanceID(); //读取本地的媒体播放实例的标识
+  // debug('initMediaPlay:' + MediaPlayer);
+  // this.setMediaStr(this.playUrl);
+  if (!window.MediaPlayer) {
+    debug('no MediaPlayer.')
+    return false
+  }
+  this.mp = new window.MediaPlayer(); //新建一个mediaplayer对象
+  var instanceId = this.mp.getNativePlayerInstanceID(); //读取本地的媒体播放实例的标识
 
-    var playListFlag = 0; //Media Player 的播放模式。 0：单媒体的播放模式 (默认值)，1: 播放列表的播放模式
-    var videoDisplayMode = 1; //MediaPlayer 对象对应的视频窗口的显示模式. 1: 全屏显示2: 按宽度显示，3: 按高度显示
-    var height = window.innerHeight;
-    var width = window.innerWidth;
-    var left = 0;
-    var top = 0;
-    var muteFlag = 0; //0: 设置为有声 (默认值) 1: 设置为静音
-    var subtitleFlag = 0; //字幕显示
-    var videoAlpha = 0; //视频的透明度
-    var cycleFlag = 0;
-    var randomFlag = 0;
-    var autoDelFlag = 0;
-    var useNativeUIFlag = 1;
-    //初始话mediaplayer对象
-    // alert("开始播放$$$");
-    this.mp.initMediaPlayer(instanceId, playListFlag, videoDisplayMode,
-        height, width, left, top, muteFlag, useNativeUIFlag, subtitleFlag, videoAlpha, cycleFlag, randomFlag, autoDelFlag);
-    // this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
-    this.mp.setAllowTrickmodeFlag(0); //设置是否允许trick操作。 0:允许 1：不允许
-    this.mp.setVideoDisplayMode(0);
-    this.mp.setVideoDisplayArea(left, top, width, height);
-    this.mp.setNativeUIFlag(0); //设置播放器本地UI显示功能 0:允许 1：不允许
-    this.mp.setAudioTrackUIFlag(1);
-    this.mp.setMuteUIFlag(1);
-    this.mp.setAudioVolumeUIFlag(1);
-    this.mp.refreshVideoDisplay();
+  var playListFlag = 0; //Media Player 的播放模式。 0：单媒体的播放模式 (默认值)，1: 播放列表的播放模式
+  var videoDisplayMode = 1; //MediaPlayer 对象对应的视频窗口的显示模式. 1: 全屏显示2: 按宽度显示，3: 按高度显示
+  var height = window.innerHeight;
+  var width = window.innerWidth;
+  var left = 0;
+  var top = 0;
+  var muteFlag = 0; //0: 设置为有声 (默认值) 1: 设置为静音
+  var subtitleFlag = 0; //字幕显示
+  var videoAlpha = 0; //视频的透明度
+  var cycleFlag = 0;
+  var randomFlag = 0;
+  var autoDelFlag = 0;
+  var useNativeUIFlag = 1;
+  //初始话mediaplayer对象
+  // alert("开始播放$$$");
+  this.mp.initMediaPlayer(instanceId, playListFlag, videoDisplayMode,
+                          height, width, left, top, muteFlag, useNativeUIFlag, subtitleFlag, videoAlpha, cycleFlag, randomFlag, autoDelFlag);
+  // this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
+  this.mp.setAllowTrickmodeFlag(0); //设置是否允许trick操作。 0:允许 1：不允许
+  this.mp.setVideoDisplayMode(0);
+  this.mp.setVideoDisplayArea(left, top, width, height);
+  this.mp.setNativeUIFlag(0); //设置播放器本地UI显示功能 0:允许 1：不允许
+  this.mp.setAudioTrackUIFlag(1);
+  this.mp.setMuteUIFlag(1);
+  this.mp.setAudioVolumeUIFlag(1);
+  this.mp.refreshVideoDisplay();
 }
 
 MediaPlayController.prototype.displayMode = function () {
-    
-    var args = [].prototype.slice(arguments, 0);
+
+  var args = [].prototype.slice(arguments, 0);
 }
 
 MediaPlayController.prototype.stop = function () {
-    if (this.isChannel) {
-        this.mp.leaveChannel();
-    } else {
-        this.mp.stop();
-        // this.mp.close();
-    }
-    if (this.mp) {
-        this.mp.releaseMediaPlayer(this.mp.getNativePlayerInstanceID());
-    }
-    return this;
+  if (this.isChannel) {
+    this.mp.leaveChannel();
+  } else {
+    this.mp.stop();
+    // this.mp.close();
+  }
+  if (this.mp) {
+    this.mp.releaseMediaPlayer(this.mp.getNativePlayerInstanceID());
+  }
+  return this;
 }
 
 MediaPlayController.prototype.play = function (playUrl) {
 
-    debug('playUrl - play: ' + playUrl);
+  debug('playUrl - play: ' + playUrl);
 
-    if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
+  if ( !playUrl ) { this.error('play 频道地址不存在！'); return; }
 
-    this.isChannel = !isNaN(playUrl);
+  this.isChannel = !isNaN(playUrl);
 
-    // this.mp.stop(1);
+  // this.mp.stop(1);
+  // this.setDisplayArea(200, 100, 500, 400);
+  // this.mp.joinChannel(playUrl);
+  // // test
+  // this.isChannel = false;
+  // // playUrl = 'http://42.236.123.10/iptv/clist/vod/yanguiren.ts';
+  // playUrl = 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/assets/video/back_video_4M_out.mp4';
 
-    debug('is joinChannel: ' + this.isChannel);
-
-    // this.setDisplayArea(200, 100, 500, 400);
-
-    // this.mp.joinChannel(playUrl);
-
-    // // test
-    // this.isChannel = false;
-    // // playUrl = 'http://42.236.123.10/iptv/clist/vod/yanguiren.ts';
-    // playUrl = 'http://222.221.25.243:6166/iptv/ppthdplay/hotelapps/index/SYHOTEL/assets/video/back_video_4M_out.mp4';
-
-    if (this.isChannel) {
-        this.showChannelNums(playUrl);
-        this.mp.joinChannel(playUrl);
-    } else {
-        // 设置播放地址
-        this.setMediaStr(playUrl);
-        debug('play mp:' + this.mp);
-        this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
-        this.mp.playFromStart();
+  if (this.isChannel) {
+    window.clist.showChannelNums(playUrl);
+    if (this.mp && this.mp.joinChannel) {
+      this.mp.joinChannel(playUrl);
     }
+  } else {
+    // 设置播放地址
+    this.setMediaStr(playUrl);
+    this.mp.setSingleMedia(this.mediaStr); //设置媒体播放器播放媒体内容
+    this.mp.playFromStart();
+  }
 
-    return this;
+  return this;
 };
 
 // 设置播放位置和大小：mode(0: 非全屏，1：全屏)
 MediaPlayController.prototype.setDisplayArea = function (left, top, width, height) {
-    
-    this.mp.setVideoDisplayMode(0);
-    this.mp.setVideoDisplayArea(left, top, width, height);
-    // this.mp.refreshVideoDisplay();
+
+  this.mp.setVideoDisplayMode(0);
+  this.mp.setVideoDisplayArea(left, top, width, height);
+  // this.mp.refreshVideoDisplay();
 
 }
 
 // 按键处理
 MediaPlayController.prototype.eventHandler = function (keycode) {
-    // TODO
+  // TODO
 };
 
 /* ---------------------------END MediaPlayer --------------------------- */
 
 window.onload = function () {
 
-    var played = false;
+  var played = false;
 
-    // 频道列表
-    window.clist = new ChannelList();
+  setChannels();
 
-    // 播放器
-    window.mpc = new MediaPlayController();
+  // 频道列表
+  window.clist = new ChannelList();
 
-    // 显示列表也需要个播放控制器对象
-    clist.mpc = window.mpc;
+  // 播放器
+  window.mpc = new MediaPlayController();
 
-    debug('onload:' + clist.mpc);
-    // 频道列表初始化
-    clist.init(function () {
-        // 初始化完成之后执行
+  // 显示列表也需要个播放控制器对象
+  clist.mpc = mpc;
 
-        var channels = clist.channels;
+  // 频道列表初始化
+  clist.init(function () {
+    // 初始化完成之后执行
 
-        debug(channels);
+    var channels = clist.channels;
+    var ucid = channels[0].UserChannelID;
+    var url = channels[0].ChannelURL;
+    window.clist.showChannelNums(ucid)
 
-        // var ucid = channels[0].UserChannelID;
-        var url = channels[0].ChannelURL;
+    //如果不是组播就使用播放地址去播放
+    url = url.indexOf('igmp://')>= 0?ucid:url;
 
-        //如果不是组播就使用播放地址去播放
-        // url = url.indexOf('igmp://')>= 0?ucid:url;
-
-        debug('init url: ' + url);
-        // 如果 session 里的已经播了，就不重复播放
-        // if (!played) {
-            // 2. 频道地址播放
-            mpc.init().play(url);
-        // }
-    });
+    debug('init url: ' + url);
+    // 如果 session 里的已经播了，就不重复播放
+    // if (!played) {
+    // 2. 频道地址播放
+    mpc.init().play(url);
+    // }
+  });
 
 
-    window.onkeydown = function (event) {
+  window.onkeydown = function (event) {
 
-        var keycode = event.which ? event.which : event.keycode;
+    var keycode = event.which ? event.which : event.keycode;
 
-        mpc.error('onkeydown code: ' + keycode);
+    mpc.error('onkeydown code: ' + keycode);
 
-        // 虚拟事件
-        if (keycode === 768) {
-            mpc.virtualEventHandler();
-            return false;
-        }
+    // 虚拟事件
+    if (keycode === 768) {
+      mpc.virtualEventHandler();
+      return false;
+    }
 
-        clist.eventHandler(event);
+    clist.eventHandler(event);
 
-        return true;
-    };
+    return true;
+  };
 }
 
 window.onunload = function () {
-    
-    // 这里执行销毁播放器实例操作，避免每打开一次直播页面
-    // 就会创建一个播放器实例
 
-    // window.mpc.stop(1);
-
-    // window.mpc.mp.stop(); // 停止播放失败，避免关闭页面后视频在后台播放
-    // window.mpc.mp.close();
-    // window.mpc.mp.releaseMediaPlayer();
-    // window.mpc = null;
-    // window.clist = null;
+  // 这里执行销毁播放器实例操作，避免每打开一次直播页面
+  // 就会创建一个播放器实例
+  if (!window.mpc || !window.mpc.mp) {
+    debug('no mpc instance.')
+    return false
+  }
+  window.mpc.mp.stop(); // 停止播放失败，避免关闭页面后视频在后台播放
+  window.mpc.mp.close();
+  window.mpc.mp.releaseMediaPlayer();
+  window.mpc = null;
+  window.clist = null;
 }
 
+function debug(str) {
+  var db = document.getElementById('clist-debug')
+  if (!db) {
+    db = document.createElement('div');
+    db.id = 'clist-debug';
+    document.body.appendChild(db);
+  }
 
-/**
- * 淡入淡出动画
- * @param  {DOMElement} 需要执行动画的元素
- * @param  {[type]} inout   取值为 'in'：淡入，'out'：淡出
- * @param  {[type]} refV    参考值，用来递增递减，最后值会赋值给元素的 opacity
- * @param  {[type]} opacity 元素的初始透明度
- * @return {[type]}
- */
-function fadeFn(el, inout, refV, opacity) {
-
-    var value = refV;
-    var timer = null;
-
-    if (inout === 'in') {
-        el.style.display = 'block';
-    }
-
-    el.style.opacity = opacity;
-
-    return function fade(start, end, stepV) {
-        var startV = start || 0;
-        var endV = end || 100;
-        var step = stepV || 1;
-        var condition = inout === 'in' ? value >= endV : value <= startV;
-        if (condition) {
-            el.style.opacity = value / 100;
-            if (inout === 'out') {
-                el.style.display = 'none';
-            }
-            clearTimeout(timer);
-            return;
-        }
-
-        value = inout === 'in' ? value + step : value - step;
-
-        el.style.opacity = value / 100;
-
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-            fade(start, end, stepV);
-        }, 10); 
-    };
-};
-
-function debug(obj) {
-    return;
-    var debugDiv = document.getElementById('debug');
-
-    if (!debugDiv) {
-
-       var debugDiv = document.createElement('div');
-       debugDiv.className = 'debug';
-       debugDiv.id = 'debug';
-
-       document.body.appendChild(debugDiv); 
-    }
-
-    var str = '';
-
-    if (typeof(obj) === 'object') {
-        str = JSON.stringify(obj);
-    } else {
-        str = '' + obj;
-    }
-
-    debugDiv.innerHTML += '[' + str + ']';
+  if (db) {
+    db.innerHTML += '[' + str + ']';
+  }
 }
-
-debug('START');
-
-
